@@ -43,8 +43,14 @@ function protect() {
   }).then((stream) => stream.pipe(gulp.dest(`${destFolder}/app`)));
 }
 
+function copyLogin() {
+  return gulp
+    .src(['index.html', 'main.mjs', 'service-worker.js'])
+    .pipe(gulp.dest(destFolder));
+}
+
 exports.protect = protect;
-exports.default = gulp.series(clean, protect);
+exports.default = gulp.series(clean, protect, copyLogin);
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().

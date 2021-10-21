@@ -53,7 +53,7 @@ async function decryptContent(response) {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  if (url.match(/\/dist\/.+\.(js|css|html)$/)) {
+  if (url.match(/\/app\/.+\.(js|css|html)$/)) {
     event.respondWith(fetch(url).then(decryptContent));
   }
 });
