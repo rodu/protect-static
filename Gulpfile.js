@@ -40,7 +40,7 @@ function protect() {
         }
       })
     );
-  }).then((stream) => stream.pipe(gulp.dest(destFolder)));
+  }).then((stream) => stream.pipe(gulp.dest(`${destFolder}/app`)));
 }
 
 exports.protect = protect;
