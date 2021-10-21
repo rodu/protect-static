@@ -3,5 +3,5 @@ const formUnlock = document.getElementById('form-unlock');
 formUnlock.addEventListener('submit', (event) => {
   event.preventDefault();
 
-  window.location.pathname = '/contents';
+  window.location.pathname = '/app';
 });
