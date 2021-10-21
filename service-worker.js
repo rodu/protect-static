@@ -12,7 +12,7 @@ async function decryptContent(response) {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  if (url.match(/\/contents\/.+\.(j|cs)s$/)) {
+  if (url.match(/\/app\/.+\.(j|cs)s$/)) {
     event.respondWith(fetch(url).then(decryptContent));
   }
 });
