@@ -2,8 +2,6 @@ const gulp = require('gulp');
 const gulpClean = require('gulp-clean');
 const tap = require('gulp-tap');
 
-const rename = require('gulp-rename');
-
 const srcFolder = 'app/**/*';
 const destFolder = 'dist';
 // Specify a list of files extensions whose content is to be encrypted
@@ -32,11 +30,6 @@ function protect() {
         if (encryptExtensions.includes(file.extname)) {
           file.contents = Buffer.from(encrypt(file.contents.toString()));
         }
-      })
-    )
-    .pipe(
-      rename((path, name) => {
-        return path;
       })
     )
     .pipe(gulp.dest(destFolder));
