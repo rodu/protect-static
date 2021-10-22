@@ -4,14 +4,68 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Protect Static</title>
+    <style type="text/css">
+      body {
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        color: rgb(233, 229, 229);
+        background-color: rgb(67, 50, 50);
+      }
+
+      .main-container {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .login-widget {
+        width: 400px;
+        margin-top: 25vh;
+      }
+
+      .login-widget .form-field {
+        height: 32px;
+        border: solid 1px #bbb;
+        border-radius: 4px;
+        font-size: 12pt;
+      }
+
+      .login-widget input.form-field {
+        width: 300px;
+        padding: 2px 5px;
+      }
+
+      .login-widget button.form-field {
+        padding: 2px 5px;
+        background-color: rgb(119, 102, 193);
+        color: #fff;
+        padding: 2px 12px;
+      }
+    </style>
   </head>
   <body>
-    <h1>Login</h1>
-    <form id="form-unlock">
-      <input type="password" id="password" />
-      <button type="submit">Unlock</button>
-    </form>
-    <script type="module" src="./main.mjs"></script>
+    <main class="main-container">
+      <section class="login-widget">
+        <h1>Login</h1>
+        <form class="login-form" id="form-unlock">
+          <input class="form-field" type="password" id="password" placeholder="Enter unlock key" />
+          <button class="form-field" type="submit">Unlock</button>
+        </form>
+      </section>
+    </main>
+    <script>
+      (function (document) {
+        'use strict';
+        const formUnlock = document.getElementById('form-unlock');
+
+        formUnlock.addEventListener('submit', (event) => {
+          event.preventDefault();
+
+          window.location.pathname = 'app/index.html';
+        });
+      })(document);
+    </script>
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker

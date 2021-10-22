@@ -45,7 +45,7 @@ function protect() {
 
 function copyLogin() {
   return gulp
-    .src(['index.html', 'main.mjs', 'service-worker.js'])
+    .src(['index.html', 'service-worker.js'])
     .pipe(gulp.dest(destFolder));
 }
 
