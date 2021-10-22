@@ -96,7 +96,7 @@
               if (event.data && event.data.type === 'PASSWORD_SET') {
                 navigator.serviceWorker.onmessage = null;
 
-                window.location.pathname = 'app/index.html';
+                window.location.assign('app/index.html');
               }
             };
 
