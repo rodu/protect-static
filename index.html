@@ -67,8 +67,6 @@
           return;
         }
 
-        const validHash = 'abcde';
-
         function showMessage(message = '') {
           messageDiv.innerHTML = message;
 
@@ -76,19 +74,24 @@
           showMessage.messageTimeout = setTimeout(() => (messageDiv.innerHTML = ''), 5000);
         }
 
-        function hashPassword(password) {
-          return 'abcde';
+        async function hashPassword(password) {
+          const msgUint8 = new TextEncoder().encode(password); // encode as (utf-8) Uint8Array
+          const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8); // hash the message
+          const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+          const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+
+          return hashHex;
         }
 
-        formUnlock.addEventListener('submit', (event) => {
+        formUnlock.addEventListener('submit', async (event) => {
           event.preventDefault();
           const { value: password } = document.getElementById('password');
 
           if (!password) return;
 
-          const hash = hashPassword(password);
+          const hash = await hashPassword(password);
 
-          if (hash === validHash) {
+          if (hash === location.hash.substring(1)) {
             navigator.serviceWorker.onmessage = (event) => {
               if (event.data && event.data.type === 'PASSWORD_SET') {
                 navigator.serviceWorker.onmessage = null;
@@ -100,7 +103,7 @@
             // First, we need to give the password to the service-worker
             navigator.serviceWorker.controller.postMessage({ type: 'SET_PASSWORD', password });
           } else {
-            showMessage('The key did not match!');
+            showMessage('The key entered is not valid!');
           }
         });
 
