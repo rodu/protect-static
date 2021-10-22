@@ -26,12 +26,20 @@ function encrypt(content = '') {
  * files with the extensions matching the given list
  */
 function protect() {
+  const password = process.env.PROTECT_STATIC_KEY;
+
+  if (!password) {
+    return Promise.reject(
+      'Please set a PROTECT_STATIC_KEY environment variable with the password to use for encryption'
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const stream = gulp.src(srcFolder).pipe(
       tap(async (file) => {
         if (encryptExtensions.includes(file.extname)) {
           file.contents = Buffer.from(
-            await aesGcmEncrypt(file.contents.toString(), 'password')
+            await aesGcmEncrypt(file.contents.toString(), password)
           );
 
           resolve(stream);
