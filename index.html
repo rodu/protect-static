@@ -8,7 +8,7 @@
       body {
         font-family: Verdana, Geneva, Tahoma, sans-serif;
         color: rgb(233, 229, 229);
-        background-color: rgb(67, 50, 50);
+        background-color: rgb(97, 81, 81);
       }
 
       .main-container {
@@ -52,15 +52,40 @@
           <input class="form-field" type="password" id="password" placeholder="Enter unlock key" />
           <button class="form-field" type="submit">Unlock</button>
         </form>
+        <div class="message" id="message"></div>
       </section>
     </main>
     <script>
       (function (document) {
         'use strict';
         const formUnlock = document.getElementById('form-unlock');
+        const messageDiv = document.getElementById('message');
+        const validHash = 'abcde';
+
+        function showMessage(message = '') {
+          messageDiv.innerHTML = message;
+
+          window.clearTimeout(showMessage.messageTimeout);
+          showMessage.messageTimeout = setTimeout(() => (messageDiv.innerHTML = ''), 5000);
+        }
+
+        function hashPassword(password) {
+          return password;
+        }
 
         formUnlock.addEventListener('submit', (event) => {
           event.preventDefault();
+          const password = document.getElementById('password');
+
+          if (!password.value) return;
+
+          const hash = hashPassword(password);
+
+          if (hash !== validHash) {
+            showMessage('The key did not match!');
+
+            return;
+          }
 
           window.location.pathname = 'app/index.html';
         });
