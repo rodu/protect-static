@@ -7,9 +7,11 @@ This project is a functioning _proof-of-concept_ providing a way to protect the 
 **\*\* DISCLAIMER \*\***
 PLEASE NOTE, I AM NOT AN EXPERT OF SECURITY OR CRYPTOGRAPHY. USE AT YOUR OWN RISK
 
-The solution uses End-to-End encryption to protect the source files of a static web app. By design, the solution encrypts the content of HTML, CSS and JavaScript files.
+The solution uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of a static web app. By design, the solution encrypts the content of HTML, CSS and JavaScript files.
 
-Sources are encrypted using a AES-GCM algorithm through a Gulp task that manipulates the file contents. A login page is then added to the final assets collection ready for release.
+Sources are encrypted using the AES-GCM algorithm through a Gulp task that copies the files manipulates (encrypting) their content. A login page is then added to the final assets collection ready for release.
+
+## How the login works
 
 When the user navigates to the public URL of the app, they must possess the password and a verification hash (to be given in the URL) that allows a first verification of the password, before proceeding any further.
 
@@ -19,12 +21,14 @@ Once the password validates, this is passed on to a service worker script, and t
 
 **Notice: The sources of the app are encrypted at rest (including the `index.html`).**
 
-When the user is redirected to `/app/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/app` folder for files with `.html`, `.css` and `.js` extension.
+## How decryption takes place
 
-For each GET request matching this criteria, the service worker will proceed to decrypt the contents on the fly, using the AES-GCM algorithm and the password initially entered.
+When the user is redirected to `/app/index.html`, the service worker (registered/activated at the login page) proceeds to intercept all the `GET` requests made to the `/app` folder for files with `.html`, `.css` and `.js` extension.
 
-When decryption succeeds, the service worker creates a new `HTTP Response` on the fly containing the clear text for the content and returns that to the browser.
+For each `GET` request matching this criteria, the service worker proceeds to decrypt the contents on the fly, using the AES-GCM algorithm and the password initially entered.
 
-The browser then can render the protected app as if it was never encrypted!
+When decryption succeeds, the service worker creates a new `Response` object on the fly, containing the clear text for the content and returns that to the browser.
 
-If someone would try to reach the protected app directly, they would only see gibberish from encrypted file contents.
+The browser can now render the protected app as if it was never encrypted!
+
+If someone would try to reach the protected app directly, they would only see _gibberish_ from encrypted file contents.
