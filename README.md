@@ -7,7 +7,7 @@ This project is a functioning _proof-of-concept_ providing a way to protect the 
 **\*\* DISCLAIMER \*\***
 PLEASE NOTE, I AM NOT AN EXPERT OF SECURITY OR CRYPTOGRAPHY. USE AT YOUR OWN RISK
 
-The solution uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of a static web app. By design, the solution encrypts the content of HTML, CSS and JavaScript files.
+The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the Web Crypto API to implement End-to-End encryption and protect the source files of a static web app. By design, the solution encrypts the content of HTML, CSS and JavaScript files.
 
 Sources are encrypted using the AES-GCM algorithm through a Gulp task that copies the files manipulates (encrypting) their content. A login page is then added to the final assets collection ready for release.
 
@@ -32,3 +32,13 @@ When decryption succeeds, the service worker creates a new `Response` object on 
 The browser can now render the protected app as if it was never encrypted!
 
 If someone would try to reach the protected app directly, they would only see _gibberish_ from encrypted file contents.
+
+## Things to notice
+
+This Web Crypto API ([SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)) and [Sevice Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) require (and only work) in presence of a trusted environemnt or [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+
+**The app must be seved under a valid HTTPS connection or the localhost environeent for these APIs to work.**
+
+## Resources
+
+[This awesome Gist and the discussion there](https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a)
