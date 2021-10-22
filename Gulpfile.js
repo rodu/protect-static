@@ -1,11 +1,14 @@
 const gulp = require('gulp');
 const gulpClean = require('gulp-clean');
 const tap = require('gulp-tap');
+const md5 = require('md5');
+
 const { Crypto } = require('node-webcrypto-ossl');
 
 const crypto = new Crypto();
 
-const srcFolder = 'app/**/*';
+const appFolder = 'app';
+const srcFolder = `${appFolder}/**/*`;
 const destFolder = 'dist';
 // Specify a list of files extensions whose content is to be encrypted
 const encryptExtensions = ['.js', '.css', '.html'];
@@ -14,11 +17,6 @@ function clean() {
   return gulp
     .src(destFolder, { read: false, allowEmpty: true })
     .pipe(gulpClean());
-}
-
-function encrypt(content = '') {
-  // The encryption here will be used to match the service-worker decryption
-  return encodeURIComponent(content);
 }
 
 /**
@@ -48,7 +46,7 @@ function protect() {
         }
       })
     );
-  }).then((stream) => stream.pipe(gulp.dest(`${destFolder}/app`)));
+  }).then((stream) => stream.pipe(gulp.dest(`${destFolder}/${appFolder}`)));
 }
 
 function copyLogin() {
@@ -57,8 +55,16 @@ function copyLogin() {
     .pipe(gulp.dest(destFolder));
 }
 
+function giveInfo(done) {
+  hashHex = md5(process.env.PROTECT_STATIC_KEY);
+
+  console.log(`Add this hash to the login URL: #${hashHex}`);
+
+  done();
+}
+
 exports.protect = protect;
-exports.default = gulp.series(clean, protect, copyLogin);
+exports.default = gulp.series(clean, protect, copyLogin, giveInfo);
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
