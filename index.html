@@ -58,8 +58,15 @@
     <script>
       (function (document) {
         'use strict';
-        const formUnlock = document.getElementById('form-unlock');
         const messageDiv = document.getElementById('message');
+        const formUnlock = document.getElementById('form-unlock');
+
+        if ('serviceWorker' in navigator === false) {
+          formUnlock.style.display = 'none';
+          messageDiv.innerHTML = 'Your browser is not supported!';
+          return;
+        }
+
         const validHash = 'abcde';
 
         function showMessage(message = '') {
@@ -70,29 +77,33 @@
         }
 
         function hashPassword(password) {
-          return password;
+          return 'abcde';
         }
 
         formUnlock.addEventListener('submit', (event) => {
           event.preventDefault();
-          const password = document.getElementById('password');
+          const { value: password } = document.getElementById('password');
 
-          if (!password.value) return;
+          if (!password) return;
 
           const hash = hashPassword(password);
 
-          if (hash !== validHash) {
+          if (hash === validHash) {
+            navigator.serviceWorker.onmessage = (event) => {
+              if (event.data && event.data.type === 'PASSWORD_SET') {
+                navigator.serviceWorker.onmessage = null;
+
+                window.location.pathname = 'app/index.html';
+              }
+            };
+
+            // First, we need to give the password to the service-worker
+            navigator.serviceWorker.controller.postMessage({ type: 'SET_PASSWORD', password });
+          } else {
             showMessage('The key did not match!');
-
-            return;
           }
-
-          window.location.pathname = 'app/index.html';
         });
-      })(document);
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
+
         navigator.serviceWorker
           .register('./service-worker.js')
           .then((reg) => {
@@ -103,7 +114,11 @@
             // registration failed
             console.log('Registration failed with ' + error);
           });
-      }
+
+        navigator.serviceWorker.ready.then(() => {
+          // navigator.serviceWorker.controller.postMessage()
+        });
+      })(document);
     </script>
   </body>
 </html>

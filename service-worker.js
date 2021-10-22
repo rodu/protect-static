@@ -38,9 +38,10 @@ async function aesGcmDecrypt(ciphertext, password) {
   }
 }
 
+let password;
 async function decryptContent(response) {
   const ciphertext = await response.text();
-  const decrypted = await aesGcmDecrypt(ciphertext, 'password');
+  const decrypted = await aesGcmDecrypt(ciphertext, password);
 
   const { status, statusText, headers } = response;
   return new Response(decrypted, {
@@ -53,7 +54,17 @@ async function decryptContent(response) {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
+  if (!password) return;
+
   if (url.match(/\/app\/.+\.(js|css|html)$/)) {
     event.respondWith(fetch(url).then(decryptContent));
+  }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_PASSWORD') {
+    password = event.data.password;
+    // Reply to tell we are ready to process requests
+    event.source.postMessage({ type: 'PASSWORD_SET' });
   }
 });
