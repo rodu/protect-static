@@ -3,6 +3,7 @@ const gulpClean = require('gulp-clean');
 const messenger = require('gulp-messenger');
 const tap = require('gulp-tap');
 const md5 = require('md5');
+const projectSettings = require('./package.json').project_settings || {};
 
 const { Crypto } = require('node-webcrypto-ossl');
 
@@ -10,11 +11,20 @@ const crypto = new Crypto();
 
 messenger.init();
 
-const appFolder = 'app';
-const srcFolder = `${appFolder}/**/*`;
-const destFolder = 'dist';
+const appFolder = projectSettings.appFolder || 'app';
+const destFolder = projectSettings.destFolder || 'dist';
 // Specify a list of files extensions whose content is to be encrypted
-const encryptExtensions = ['.js', '.css', '.html'];
+const encryptExtensions = projectSettings.encryptExtensions || [
+  '.js',
+  '.css',
+  '.html',
+];
+
+if (appFolder === destFolder) {
+  throw new Error('appFolder and destFolder cannot have the same value!');
+}
+
+const sources = `${appFolder}/**/*`;
 
 function clean() {
   return gulp
@@ -36,7 +46,7 @@ function protect() {
   }
 
   return new Promise((resolve, reject) => {
-    const stream = gulp.src(srcFolder).pipe(
+    const stream = gulp.src(sources).pipe(
       tap(async (file) => {
         if (encryptExtensions.includes(file.extname)) {
           file.contents = Buffer.from(

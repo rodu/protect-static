@@ -16,6 +16,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "rodu",
+  "license": "MIT",
+  "project_settings": {
+    "appFolder": "app",
+    "destFolder": "dist",
+    "encryptExtensions": [".html", ".css", ".js"]
+  }
 }
