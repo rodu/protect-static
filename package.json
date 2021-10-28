@@ -21,6 +21,6 @@
   "project_settings": {
     "appFolder": "app",
     "destFolder": "dist",
-    "encryptExtensions": [".html", ".css", ".js"]
+    "encryptExtensions": ["html", "css", "js"]
   }
 }

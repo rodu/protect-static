@@ -15,9 +15,9 @@ const appFolder = projectSettings.appFolder || 'app';
 const destFolder = projectSettings.destFolder || 'dist';
 // Specify a list of files extensions whose content is to be encrypted
 const encryptExtensions = projectSettings.encryptExtensions || [
-  '.js',
-  '.css',
-  '.html',
+  'js',
+  'css',
+  'html',
 ];
 
 if (appFolder === destFolder) {
@@ -48,7 +48,9 @@ function protect() {
   return new Promise((resolve, reject) => {
     const stream = gulp.src(sources).pipe(
       tap(async (file) => {
-        if (encryptExtensions.includes(file.extname)) {
+        const extension = file.extname.substring(1); // skips the dot (.)
+
+        if (encryptExtensions.includes(extension)) {
           file.contents = Buffer.from(
             await aesGcmEncrypt(file.contents.toString(), password)
           );
