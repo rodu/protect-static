@@ -51,12 +51,17 @@ async function decryptContent(response) {
   });
 }
 
+// This regexp is manipulated by Gulp to add the necessary values
+const decryptUrlRegExp = new RegExp(
+  '/__APP_FOLDER__/.+\\.(__ENCRYPT_EXTENSIONS__)$'
+);
+
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
   if (!password) return;
 
-  if (url.match(/\/app\/.+\.(js|css|html)$/)) {
+  if (url.match(decryptUrlRegExp)) {
     event.respondWith(fetch(url).then(decryptContent));
   }
 });

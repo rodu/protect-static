@@ -65,6 +65,20 @@ function protect() {
 function copyLogin() {
   return gulp
     .src(['index.html', 'service-worker.js'])
+    .pipe(
+      tap((file) => {
+        if (file.basename === 'service-worker.js') {
+          // Replaces the RegExp to match GET requests in the service worker
+          // based on the project settings
+          const replacedContent = file.contents
+            .toString()
+            .replace(/__APP_FOLDER__/, appFolder)
+            .replace(/__ENCRYPT_EXTENSIONS__/, encryptExtensions.join('|'));
+
+          file.contents = Buffer.from(replacedContent);
+        }
+      })
+    )
     .pipe(gulp.dest(destFolder));
 }
 
