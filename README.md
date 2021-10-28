@@ -47,11 +47,14 @@ The solution protects the release sources by encrypting them using the [AES-GCM 
 
 A Gulp task implements the algorithm and looks for the encryption password in a `PROTECT_STATIC_KEY` environment variable we should set before to runing `Gulp`.
 
-To encrypt your app, **make sure to choose a strong password** and run the following command in the terminal:
+### Encrypting your app
 
-`export PROTECT_STATIC_KEY yourChosenPassword gulp`
+Once you have a strong password, run the following commands:
 
-When the task runs, it copies the files to a release-ready `dist/app` folder, while encrypting the contents.
+`export PROTECT_STATIC_KEY` **PutYourPasswordHere**
+`gulp --silent`
+
+Gulp will copy the app files to a release-ready `dist/app` folder, while encrypting the contents.
 
 The final `dist` folder will also include a login page, alongside a service worker script (more on that later).
 

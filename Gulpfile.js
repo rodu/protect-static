@@ -1,11 +1,14 @@
 const gulp = require('gulp');
 const gulpClean = require('gulp-clean');
+const messenger = require('gulp-messenger');
 const tap = require('gulp-tap');
 const md5 = require('md5');
 
 const { Crypto } = require('node-webcrypto-ossl');
 
 const crypto = new Crypto();
+
+messenger.init();
 
 const appFolder = 'app';
 const srcFolder = `${appFolder}/**/*`;
@@ -58,7 +61,8 @@ function copyLogin() {
 function giveInfo(done) {
   hashHex = md5(process.env.PROTECT_STATIC_KEY);
 
-  console.log(`Add this hash to the login URL: #${hashHex}`);
+  messenger.note(`Output generated in: ./${destFolder}`);
+  messenger.note(`Add this hash to the public URL: #${hashHex}`);
 
   done();
 }
