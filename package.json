@@ -19,8 +19,13 @@
   "author": "rodu",
   "license": "MIT",
   "project_settings": {
-    "appFolder": "app",
-    "destFolder": "dist",
-    "encryptExtensions": ["html", "css", "js"]
+    "appBasePath": ".",
+    "appDistFolder": "dist",
+    "protectedDistFolder": "dist-protected",
+    "encryptExtensions": [
+      "html",
+      "css",
+      "js"
+    ]
   }
 }

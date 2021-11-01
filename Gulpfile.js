@@ -11,8 +11,10 @@ const crypto = new Crypto();
 
 messenger.init();
 
-const appFolder = projectSettings.appFolder || 'app';
-const destFolder = projectSettings.destFolder || 'dist';
+const appBasePath = projectSettings.appBasePath || '.';
+const appDistFolder = projectSettings.appDistFolder || 'app';
+const protectedDistFolder =
+  projectSettings.protectedDistFolder || 'dist-protected';
 // Specify a list of files extensions whose content is to be encrypted
 const encryptExtensions = projectSettings.encryptExtensions || [
   'js',
@@ -20,15 +22,15 @@ const encryptExtensions = projectSettings.encryptExtensions || [
   'html',
 ];
 
-if (appFolder === destFolder) {
+if (appDistFolder === protectedDistFolder) {
   throw new Error('appFolder and destFolder cannot have the same value!');
 }
 
-const sources = `${appFolder}/**/*`;
+const sources = `${appBasePath}/${appDistFolder}/**/*`;
 
 function clean() {
   return gulp
-    .src(destFolder, { read: false, allowEmpty: true })
+    .src(protectedDistFolder, { read: false, allowEmpty: true })
     .pipe(gulpClean());
 }
 
@@ -37,9 +39,9 @@ function clean() {
  * files with the extensions matching the given list
  */
 function protect() {
-  const password = process.env.PROTECT_STATIC_KEY;
+  const key = process.env.PROTECT_STATIC_KEY;
 
-  if (!password) {
+  if (!key) {
     return Promise.reject(
       'Please set a PROTECT_STATIC_KEY environment variable with the password to use for encryption'
     );
@@ -52,7 +54,7 @@ function protect() {
 
         if (encryptExtensions.includes(extension)) {
           file.contents = Buffer.from(
-            await aesGcmEncrypt(file.contents.toString(), password)
+            await aesGcmEncrypt(file.contents.toString(), key)
           );
 
           resolve(stream);
@@ -61,7 +63,11 @@ function protect() {
         }
       })
     );
-  }).then((stream) => stream.pipe(gulp.dest(`${destFolder}/${appFolder}`)));
+  }).then((stream) =>
+    stream.pipe(
+      gulp.dest(`${appBasePath}/${protectedDistFolder}/${appDistFolder}`)
+    )
+  );
 }
 
 function copyLogin() {
@@ -69,26 +75,26 @@ function copyLogin() {
     .src(['index.html', 'service-worker.js'])
     .pipe(
       tap((file) => {
-        if (file.basename === 'service-worker.js') {
-          // Replaces the RegExp to match GET requests in the service worker
-          // based on the project settings
-          const replacedContent = file.contents
-            .toString()
-            .replace(/__APP_FOLDER__/, appFolder)
-            .replace(/__ENCRYPT_EXTENSIONS__/, encryptExtensions.join('|'));
+        // Replaces the RegExp to match GET requests in the service worker
+        // based on the project settings
+        const replacedContent = file.contents
+          .toString()
+          .replace(/__APP_FOLDER__/, appDistFolder)
+          .replace(/__ENCRYPT_EXTENSIONS__/, encryptExtensions.join('|'));
 
-          file.contents = Buffer.from(replacedContent);
-        }
+        file.contents = Buffer.from(replacedContent);
       })
     )
-    .pipe(gulp.dest(destFolder));
+    .pipe(gulp.dest(`${appBasePath}/${protectedDistFolder}`));
 }
 
 function giveInfo(done) {
-  hashHex = md5(process.env.PROTECT_STATIC_KEY);
+  const key = process.env.PROTECT_STATIC_KEY;
+  const keyHash = md5(key);
 
-  messenger.note(`Output generated in: ./${destFolder}`);
-  messenger.note(`Add this hash to the public URL: #${hashHex}`);
+  messenger.note(`Output generated in: ${appBasePath}/${protectedDistFolder}`);
+  messenger.note(`Unlock key: ${key}`);
+  messenger.note(`Add this hash to the public URL: #${keyHash}`);
 
   done();
 }
