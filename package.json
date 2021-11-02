@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "del": "^6.0.0",
+    "generate-password": "^1.6.1",
     "rc": "^1.2.8"
   },
   "devDependencies": {

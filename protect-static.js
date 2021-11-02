@@ -7,6 +7,7 @@ const settings = require('rc')('protectstatic', {
   protectedDistFolder: 'dist-protected',
   encryptExtensions: ['js', 'css', 'html'],
 });
+const pwGenerator = require('generate-password');
 
 const { appBasePath, appDistFolder, protectedDistFolder, encryptExtensions } =
   settings;
@@ -27,15 +28,16 @@ function clean() {
  * files with the extensions matching the given list
  */
 function protect() {
-  const key = process.env.PROTECT_STATIC_KEY;
+  const key =
+    process.env.PROTECT_STATIC_KEY ||
+    pwGenerator.generate({
+      length: 30,
+      numbers: true,
+      symbols: true,
+    });
 
-  if (!key) {
-    return Promise.reject(
-      'Please set a PROTECT_STATIC_KEY environment variable with the password to use for encryption'
-    );
-  }
-
-  return new Promise((resolve, reject) => {
+  console.log(key);
+  /* return new Promise((resolve, reject) => {
     const stream = gulp.src(sources).pipe(
       tap(async (file) => {
         const extension = file.extname.substring(1); // skips the dot (.)
@@ -55,7 +57,7 @@ function protect() {
     stream.pipe(
       gulp.dest(`${appBasePath}/${protectedDistFolder}/${appDistFolder}`)
     )
-  );
+  ); */
 }
 
 /**
@@ -91,6 +93,7 @@ async function aesGcmEncrypt(plaintext, password) {
 
 async function protectStatic() {
   await clean();
+  protect();
 }
 
 module.exports = protectStatic;
