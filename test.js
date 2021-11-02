@@ -1,3 +1,0 @@
-const protectStatic = require('.');
-
-protectStatic();
