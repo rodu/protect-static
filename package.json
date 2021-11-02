@@ -2,8 +2,12 @@
   "name": "protect-static",
   "version": "1.0.0",
   "description": "",
-  "main": "Gulpfile.js",
-  "dependencies": {},
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "del": "^6.0.0",
+    "rc": "^1.2.8"
+  },
   "devDependencies": {
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
@@ -17,15 +21,5 @@
   },
   "keywords": [],
   "author": "rodu",
-  "license": "MIT",
-  "project_settings": {
-    "appBasePath": ".",
-    "appDistFolder": "dist",
-    "protectedDistFolder": "dist-protected",
-    "encryptExtensions": [
-      "html",
-      "css",
-      "js"
-    ]
-  }
+  "license": "MIT"
 }
