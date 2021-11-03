@@ -82,7 +82,7 @@ function protect({ settings, key }) {
                 writable.write(cyphertext, 'utf8', resolve);
               });
             } else {
-              console.log('Copied in clear text:', source);
+              console.log('Copying (non encrypted):', source);
               readable.pipe(writable);
 
               resolve();
@@ -92,7 +92,7 @@ function protect({ settings, key }) {
 
         const destination = `${settings.appBasePath}/${settings.protectedDistFolder}/${source}`;
         ncp(source, destination, options, (err) => {
-          if (err) console.error(err);
+          if (err) return reject(err);
 
           resolve();
         });
