@@ -1,6 +1,7 @@
 'use strict';
 const { Crypto } = require('node-webcrypto-ossl');
 const fs = require('fs');
+const path = require('path');
 const del = require('del');
 const glob = require('glob');
 const mkdirp = require('mkdirp');
@@ -52,18 +53,22 @@ function generateKey(settings) {
  */
 function protect({ settings, key }) {
   return new Promise((resolve, reject) => {
+    const outputPath = path.join(
+      settings.appBasePath,
+      settings.protectedDistFolder
+    );
     const extRegExp = new RegExp(
       `${settings.appDistFolder}/.+\\.(${settings.encryptExtensions.join(
         '|'
       )})$`
     );
 
-    const copyFile = (source) => {
+    const copyFile = (filePath) => {
       return new Promise((resolve, reject) => {
         const options = {
           clobber: true,
           transform: (readable, writable) => {
-            if (extRegExp.test(source)) {
+            if (extRegExp.test(filePath)) {
               const chunks = [];
 
               readable.on('readable', () => {
@@ -76,13 +81,13 @@ function protect({ settings, key }) {
               readable.on('end', async () => {
                 const content = chunks.join('');
 
-                console.log('Encrypting:', source);
+                console.log('Encrypting:', filePath);
                 const cyphertext = await aesGcmEncrypt(content, key);
 
                 writable.write(cyphertext, 'utf8', resolve);
               });
             } else {
-              console.log('Copying (non encrypted):', source);
+              console.log('Copying (non encrypted):', filePath);
               readable.pipe(writable);
 
               resolve();
@@ -90,8 +95,8 @@ function protect({ settings, key }) {
           },
         };
 
-        const destination = `${settings.appBasePath}/${settings.protectedDistFolder}/${source}`;
-        ncp(source, destination, options, (err) => {
+        const destination = path.join(outputPath, filePath);
+        ncp(filePath, destination, options, (err) => {
           if (err) return reject(err);
 
           resolve();
@@ -101,13 +106,13 @@ function protect({ settings, key }) {
 
     glob(settings.sources, (err, matches) => {
       if (err) return reject(err);
-      // Creates a list of file paths excluding directories
-      const { dirs, files } = matches.reduce(
+      // Creates two separate lists of file and folder paths
+      const { folders, files } = matches.reduce(
         (paths, path) => {
           const stats = fs.statSync(path);
 
           if (stats.isDirectory()) {
-            paths.dirs.push(path);
+            paths.folders.push(path);
           }
 
           if (stats.isFile()) {
@@ -117,16 +122,12 @@ function protect({ settings, key }) {
           return paths;
         },
         {
-          dirs: [],
+          folders: [],
           files: [],
         }
       );
 
-      dirs.forEach((path) =>
-        mkdirp.sync(
-          `${settings.appBasePath}/${settings.protectedDistFolder}/${path}`
-        )
-      );
+      folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
 
       Promise.all(files.map(copyFile)).then(resolve).catch(reject);
     });
