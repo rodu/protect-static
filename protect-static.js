@@ -7,7 +7,7 @@ const glob = require('glob');
 const mkdirp = require('mkdirp');
 const { ncp } = require('ncp');
 const rc = require('rc');
-const tap = require('gulp-tap');
+const md5 = require('md5');
 const pwGenerator = require('generate-password');
 
 const crypto = new Crypto();
@@ -34,10 +34,10 @@ function clean(settings) {
   return del(settings.protectedDistFolder).then(() => settings);
 }
 
-function generateKey(settings) {
+function generatePassword(settings) {
   return Promise.resolve({
-    settings,
-    key:
+    ...settings,
+    password:
       process.env.PROTECT_STATIC_KEY ||
       pwGenerator.generate({
         length: 30,
@@ -51,7 +51,7 @@ function generateKey(settings) {
  * The protect task will make a copy of contents while encrypting the
  * files with the extensions matching the given list
  */
-function protect({ settings, key }) {
+function protect(settings) {
   return new Promise((resolve, reject) => {
     const outputPath = path.join(
       settings.appBasePath,
@@ -82,15 +82,18 @@ function protect({ settings, key }) {
                 const content = chunks.join('');
 
                 console.log('Encrypting:', filePath);
-                const cyphertext = await aesGcmEncrypt(content, key);
+                const cyphertext = await aesGcmEncrypt(
+                  content,
+                  settings.password
+                );
 
-                writable.write(cyphertext, 'utf8', resolve);
+                writable.write(cyphertext, 'utf8', () => resolve(settings));
               });
             } else {
               console.log('Copying (non encrypted):', filePath);
               readable.pipe(writable);
 
-              resolve();
+              resolve(settings);
             }
           },
         };
@@ -99,7 +102,7 @@ function protect({ settings, key }) {
         ncp(filePath, destination, options, (err) => {
           if (err) return reject(err);
 
-          resolve();
+          resolve(settings);
         });
       });
     };
@@ -129,17 +132,34 @@ function protect({ settings, key }) {
 
       folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
 
-      Promise.all(files.map(copyFile)).then(resolve).catch(reject);
+      Promise.all(files.map(copyFile))
+        .then(() => resolve(settings))
+        .catch(reject);
     });
   });
+}
+
+function addLogin(settings) {
+  return new Promise((resolve, reject) => {
+    resolve(settings);
+  });
+}
+
+function showCompletionInfo(settings) {
+  console.log('\nUnlock password:', settings.password);
+  console.log(`Add this hash to the login URL: #${md5(settings.password)}`);
+  console.log('\nDone!');
+
+  return Promise.resolve(settings);
 }
 
 function protectStatic() {
   return readSettings()
     .then(clean)
-    .then(generateKey)
+    .then(generatePassword)
     .then(protect)
-    .then(() => console.log('Done!'))
+    .then(addLogin)
+    .then(showCompletionInfo)
     .catch((error) => console.error(error));
 }
 
