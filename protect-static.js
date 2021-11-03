@@ -1,44 +1,101 @@
 'use strict';
 const { Crypto } = require('node-webcrypto-ossl');
 const del = require('del');
-const settings = require('rc')('protectstatic', {
-  appBasePath: '.',
-  appDistFolder: 'app',
-  protectedDistFolder: 'dist-protected',
-  encryptExtensions: ['js', 'css', 'html'],
-});
+const glob = require('glob');
+const mkdirp = require('mkdirp');
+const { ncp } = require('ncp');
+const rc = require('rc');
+const tap = require('gulp-tap');
 const pwGenerator = require('generate-password');
 
-const { appBasePath, appDistFolder, protectedDistFolder, encryptExtensions } =
-  settings;
-
-if (appDistFolder === protectedDistFolder) {
-  throw new Error('appFolder and destFolder cannot have the same value!');
-}
-
-const sources = `${appBasePath}/${appDistFolder}/**/*`;
 const crypto = new Crypto();
 
-function clean() {
-  return del(protectedDistFolder);
+function readSettings() {
+  const settingsDefaults = {
+    appBasePath: '.',
+    appDistFolder: 'app',
+    protectedDistFolder: 'dist-protected',
+    encryptExtensions: ['js', 'css', 'html'],
+  };
+  const settings = rc('protectstatic', settingsDefaults);
+
+  if (settings.appDistFolder === settings.protectedDistFolder) {
+    throw new Error('appFolder and destFolder cannot have the same value!');
+  }
+
+  const sources = `${settings.appBasePath}/${settings.appDistFolder}/**/*`;
+
+  return Promise.resolve({ ...settings, sources });
+}
+
+function clean(settings) {
+  return del(settings.protectedDistFolder).then(() => settings);
+}
+
+function generateKey(settings) {
+  return Promise.resolve({
+    settings,
+    key:
+      process.env.PROTECT_STATIC_KEY ||
+      pwGenerator.generate({
+        length: 30,
+        numbers: true,
+        symbols: true,
+      }),
+  });
 }
 
 /**
  * The protect task will make a copy of contents while encrypting the
  * files with the extensions matching the given list
  */
-function protect() {
-  const key =
-    process.env.PROTECT_STATIC_KEY ||
-    pwGenerator.generate({
-      length: 30,
-      numbers: true,
-      symbols: true,
+function protect({ settings, key }) {
+  return new Promise((resolve, reject) => {
+    const destination = `${settings.appBasePath}/${settings.protectedDistFolder}/${settings.appDistFolder}`;
+    const extRegExp = new RegExp(
+      `\\.(${settings.encryptExtensions.join('|')})$`
+    );
+
+    const copyFile = (source) => {
+      return new Promise((resolve, reject) => {
+        const options = {};
+
+        if (extRegExp.test(source)) {
+          options.transform = (readable, writable) => {
+            const chunks = [];
+
+            readable.on('readable', () => {
+              let chunk;
+              while (null !== (chunk = readable.read())) {
+                chunks.push(chunk);
+              }
+            });
+
+            readable.on('end', () => {
+              const content = chunks.join('');
+
+              writable.write(content, 'utf8', resolve);
+            });
+          };
+        }
+
+        ncp(source, destination, options, (err) => {
+          if (err) return reject(err);
+
+          resolve();
+        });
+      });
+    };
+
+    mkdirp.sync(destination);
+
+    glob(settings.sources, (err, files) => {
+      if (err) return reject(err);
+
+      Promise.all(files.map(copyFile)).then(resolve).catch(reject);
     });
 
-  console.log(key);
-  /* return new Promise((resolve, reject) => {
-    const stream = gulp.src(sources).pipe(
+    /* const stream = gulp.src(sources).pipe(
       tap(async (file) => {
         const extension = file.extname.substring(1); // skips the dot (.)
 
@@ -56,8 +113,8 @@ function protect() {
   }).then((stream) =>
     stream.pipe(
       gulp.dest(`${appBasePath}/${protectedDistFolder}/${appDistFolder}`)
-    )
-  ); */
+    )*/
+  });
 }
 
 /**
@@ -91,9 +148,12 @@ async function aesGcmEncrypt(plaintext, password) {
   );
 }
 
-async function protectStatic() {
-  await clean();
-  protect();
+function protectStatic() {
+  readSettings()
+    .then(clean)
+    .then(generateKey)
+    .then(protect)
+    .catch((error) => console.error(error));
 }
 
 module.exports = protectStatic;
