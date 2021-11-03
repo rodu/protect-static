@@ -1,5 +1,6 @@
 'use strict';
 const { Crypto } = require('node-webcrypto-ossl');
+const fs = require('fs');
 const del = require('del');
 const glob = require('glob');
 const mkdirp = require('mkdirp');
@@ -23,7 +24,7 @@ function readSettings() {
     throw new Error('appFolder and destFolder cannot have the same value!');
   }
 
-  const sources = `${settings.appBasePath}/${settings.appDistFolder}/**/*`;
+  const sources = `${settings.appBasePath}/${settings.appDistFolder}/**`;
 
   return Promise.resolve({ ...settings, sources });
 }
@@ -51,71 +52,97 @@ function generateKey(settings) {
  */
 function protect({ settings, key }) {
   return new Promise((resolve, reject) => {
-    const destination = `${settings.appBasePath}/${settings.protectedDistFolder}/${settings.appDistFolder}`;
     const extRegExp = new RegExp(
-      `\\.(${settings.encryptExtensions.join('|')})$`
+      `${settings.appDistFolder}/.+\\.(${settings.encryptExtensions.join(
+        '|'
+      )})$`
     );
 
     const copyFile = (source) => {
       return new Promise((resolve, reject) => {
-        const options = {};
+        const options = {
+          clobber: true,
+          transform: (readable, writable) => {
+            if (extRegExp.test(source)) {
+              const chunks = [];
 
-        if (extRegExp.test(source)) {
-          options.transform = (readable, writable) => {
-            const chunks = [];
+              readable.on('readable', () => {
+                let chunk;
+                while (null !== (chunk = readable.read())) {
+                  chunks.push(chunk);
+                }
+              });
 
-            readable.on('readable', () => {
-              let chunk;
-              while (null !== (chunk = readable.read())) {
-                chunks.push(chunk);
-              }
-            });
+              readable.on('end', async () => {
+                const content = chunks.join('');
 
-            readable.on('end', () => {
-              const content = chunks.join('');
+                console.log('Encrypting:', source);
+                const cyphertext = await aesGcmEncrypt(content, key);
 
-              writable.write(content, 'utf8', resolve);
-            });
-          };
-        }
+                writable.write(cyphertext, 'utf8', resolve);
+              });
+            } else {
+              console.log('Copied in clear text:', source);
+              readable.pipe(writable);
 
+              resolve();
+            }
+          },
+        };
+
+        const destination = `${settings.appBasePath}/${settings.protectedDistFolder}/${source}`;
         ncp(source, destination, options, (err) => {
-          if (err) return reject(err);
+          if (err) console.error(err);
 
           resolve();
         });
       });
     };
 
-    mkdirp.sync(destination);
-
-    glob(settings.sources, (err, files) => {
+    glob(settings.sources, (err, matches) => {
       if (err) return reject(err);
+      // Creates a list of file paths excluding directories
+      const { dirs, files } = matches.reduce(
+        (paths, path) => {
+          const stats = fs.statSync(path);
+
+          if (stats.isDirectory()) {
+            paths.dirs.push(path);
+          }
+
+          if (stats.isFile()) {
+            paths.files.push(path);
+          }
+
+          return paths;
+        },
+        {
+          dirs: [],
+          files: [],
+        }
+      );
+
+      dirs.forEach((path) =>
+        mkdirp.sync(
+          `${settings.appBasePath}/${settings.protectedDistFolder}/${path}`
+        )
+      );
 
       Promise.all(files.map(copyFile)).then(resolve).catch(reject);
     });
-
-    /* const stream = gulp.src(sources).pipe(
-      tap(async (file) => {
-        const extension = file.extname.substring(1); // skips the dot (.)
-
-        if (encryptExtensions.includes(extension)) {
-          file.contents = Buffer.from(
-            await aesGcmEncrypt(file.contents.toString(), key)
-          );
-
-          resolve(stream);
-        } else {
-          resolve(stream);
-        }
-      })
-    );
-  }).then((stream) =>
-    stream.pipe(
-      gulp.dest(`${appBasePath}/${protectedDistFolder}/${appDistFolder}`)
-    )*/
   });
 }
+
+function protectStatic() {
+  return readSettings()
+    .then(clean)
+    .then(generateKey)
+    .then(protect)
+    .then(() => console.log('Done!'))
+    .catch((error) => console.error(error));
+}
+
+module.exports = protectStatic;
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
@@ -147,13 +174,3 @@ async function aesGcmEncrypt(plaintext, password) {
     Buffer.from(new Uint8Array(ctBuffer)).toString('base64')
   );
 }
-
-function protectStatic() {
-  readSettings()
-    .then(clean)
-    .then(generateKey)
-    .then(protect)
-    .catch((error) => console.error(error));
-}
-
-module.exports = protectStatic;
