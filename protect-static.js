@@ -1,15 +1,29 @@
 'use strict';
 const { Crypto } = require('node-webcrypto-ossl');
 const path = require('path');
+const fs = require('fs');
 const del = require('del');
-const through = require('through2');
+const glob = require('glob');
+const mkdirp = require('mkdirp');
 const copy = require('recursive-copy');
+const { ncp } = require('ncp');
 const rc = require('rc');
+const through = require('through2');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
 
 const crypto = new Crypto();
 const appBasePath = process.cwd();
+
+const getModulePath = () => {
+  const cwd = process.cwd();
+  const expectedPath = path.join(cwd, 'node_modules/protect-static');
+
+  return fs.existsSync(expectedPath) ? expectedPath : cwd;
+};
+const logCopy = (message, src) => {
+  console.log(`\t${message}: ${src.replace(appBasePath, '')}`);
+};
 
 function readSettings() {
   const settingsDefaults = {
@@ -18,12 +32,12 @@ function readSettings() {
     encryptExtensions: ['js', 'css', 'html'],
   };
   const settings = rc('protectstatic', settingsDefaults);
-  console.dir(settings);
+
   if (settings.appDistFolder === settings.protectedDistFolder) {
     throw new Error('appFolder and destFolder cannot have the same value!');
   }
 
-  const sources = `${appBasePath}/${settings.appDistFolder}`;
+  const sources = `./${settings.appDistFolder}/**`;
 
   return Promise.resolve({ ...settings, sources });
 }
@@ -50,63 +64,119 @@ function generatePassword(settings) {
  * files with the extensions matching the given list
  */
 function protect(settings) {
-  const outputPath = path.join(
-    appBasePath,
-    settings.protectedDistFolder,
-    settings.appDistFolder
-  );
-  const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
-  const logCopy = (message, src) => {
-    console.log(`\t${message}: ${src.replace(appBasePath, '')}`);
-  };
+  return new Promise((resolve, reject) => {
+    const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+    const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
-  console.log('\nProtecting assets:');
-  return copy(settings.sources, outputPath, {
-    transform: (src) => {
-      if (expr.test(path.extname(src))) {
-        return through(async (chunk, enc, done) => {
-          const content = chunk.toString();
+    const copyFile = (filePath) => {
+      return new Promise((resolve, reject) => {
+        const options = {
+          clobber: true,
+          transform: (readable, writable) => {
+            if (expr.test(filePath)) {
+              const chunks = [];
 
-          logCopy('Encrypting', src);
-          const cyphertext = await aesGcmEncrypt(content, settings.password);
+              readable.on('readable', () => {
+                let chunk;
+                while (null !== (chunk = readable.read())) {
+                  chunks.push(chunk);
+                }
+              });
 
-          done(null, cyphertext);
+              readable.on('end', async () => {
+                const content = chunks.join('');
+
+                logCopy('Encrypting', filePath);
+                const cyphertext = await aesGcmEncrypt(
+                  content,
+                  settings.password
+                );
+
+                writable.write(cyphertext, 'utf8', resolve);
+              });
+            } else {
+              logCopy('Copying (non encrypted)', filePath);
+              readable.pipe(writable);
+
+              resolve();
+            }
+          },
+        };
+
+        const destination = path.join(outputPath, filePath);
+
+        ncp(filePath, destination, options, (err) => {
+          if (err) return reject(err);
+
+          resolve();
         });
-      }
+      });
+    };
 
-      logCopy('Copying (non encrypted)', src);
-      return null;
-    },
-  }).then(() => settings);
+    glob(settings.sources, (err, matches) => {
+      if (err) return reject(err);
+      // Creates two separate lists of file and folder paths
+      const { folders, files } = matches.reduce(
+        (paths, path) => {
+          const stats = fs.statSync(path);
+
+          if (stats.isDirectory()) {
+            paths.folders.push(path);
+          }
+
+          if (stats.isFile()) {
+            paths.files.push(path);
+          }
+
+          return paths;
+        },
+        {
+          folders: [],
+          files: [],
+        }
+      );
+
+      folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
+
+      Promise.all(files.map(copyFile))
+        .then(() => resolve(settings))
+        .catch(reject);
+    });
+  });
 }
 
 function addLogin(settings) {
   const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+  const modulePath = getModulePath();
   const sources = ['./index.html', './service-worker.js'];
   console.log('\nAdding login page:');
 
   return Promise.all(
     sources.map((source) => {
-      return copy(source, path.join(outputPath, source), {
-        transform: (src) => {
-          return through(async (chunk, enc, done) => {
-            const content = chunk.toString();
+      return copy(
+        path.join(modulePath, source),
+        path.join(outputPath, source),
+        {
+          transform: (src) => {
+            return through((chunk, enc, done) => {
+              const content = chunk.toString();
 
-            console.log('\tCopying:', src);
-            // Replaces the RegExp to match GET requests in the service worker
-            // based on the project settings
-            const replacedContent = content
-              .toString()
-              .replace(/__APP_FOLDER__/, settings.appDistFolder)
-              .replace(
-                /__ENCRYPT_EXTENSIONS__/,
-                settings.encryptExtensions.join('|')
-              );
+              logCopy('\tCopying', src);
+              // Replaces the RegExp to match GET requests in the service worker
+              // based on the project settings
+              const replacedContent = content
+                .toString()
+                .replace(/__APP_FOLDER__/, settings.appDistFolder)
+                .replace(
+                  /__ENCRYPT_EXTENSIONS__/,
+                  settings.encryptExtensions.join('|')
+                );
 
-            done(null, replacedContent);
-          });
-        },
-      });
+              done(null, replacedContent);
+            });
+          },
+        }
+      );
     })
   ).then(() => settings);
 }

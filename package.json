@@ -2,13 +2,15 @@
   "name": "protect-static",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./bin/protect-static.js",
   "private": true,
   "dependencies": {
     "del": "^6.0.0",
     "generate-password": "^1.6.1",
+    "glob": "^7.2.0",
     "md5": "^2.3.0",
     "mkdirp": "^1.0.4",
+    "ncp": "^2.0.0",
     "rc": "^1.2.8",
     "recursive-copy": "^2.0.13",
     "through2": "^4.0.2"
