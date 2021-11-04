@@ -52,7 +52,8 @@ function generatePassword(settings) {
 function protect(settings) {
   const outputPath = path.join(
     settings.appBasePath,
-    settings.protectedDistFolder
+    settings.protectedDistFolder,
+    settings.appDistFolder
   );
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
