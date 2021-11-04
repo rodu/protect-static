@@ -1,11 +1,9 @@
 'use strict';
 const { Crypto } = require('node-webcrypto-ossl');
-const fs = require('fs');
 const path = require('path');
 const del = require('del');
-const glob = require('glob');
-const mkdirp = require('mkdirp');
-const { ncp } = require('ncp');
+const through = require('through2');
+const copy = require('recursive-copy');
 const rc = require('rc');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
@@ -25,7 +23,7 @@ function readSettings() {
     throw new Error('appFolder and destFolder cannot have the same value!');
   }
 
-  const sources = `${settings.appBasePath}/${settings.appDistFolder}/**`;
+  const sources = `${settings.appBasePath}/${settings.appDistFolder}`;
 
   return Promise.resolve({ ...settings, sources });
 }
@@ -52,91 +50,28 @@ function generatePassword(settings) {
  * files with the extensions matching the given list
  */
 function protect(settings) {
-  return new Promise((resolve, reject) => {
-    const outputPath = path.join(
-      settings.appBasePath,
-      settings.protectedDistFolder
-    );
-    const extRegExp = new RegExp(
-      `${settings.appDistFolder}/.+\\.(${settings.encryptExtensions.join(
-        '|'
-      )})$`
-    );
+  const outputPath = path.join(
+    settings.appBasePath,
+    settings.protectedDistFolder
+  );
+  const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
-    const copyFile = (filePath) => {
-      return new Promise((resolve, reject) => {
-        const options = {
-          clobber: true,
-          transform: (readable, writable) => {
-            if (extRegExp.test(filePath)) {
-              const chunks = [];
+  return copy(settings.sources, outputPath, {
+    transform: (src) => {
+      if (expr.test(path.extname(src))) {
+        return through(async (chunk, enc, done) => {
+          const content = chunk.toString();
+          console.log('Encrypting:', src);
+          const cyphertext = await aesGcmEncrypt(content, settings.password);
 
-              readable.on('readable', () => {
-                let chunk;
-                while (null !== (chunk = readable.read())) {
-                  chunks.push(chunk);
-                }
-              });
-
-              readable.on('end', async () => {
-                const content = chunks.join('');
-
-                console.log('Encrypting:', filePath);
-                const cyphertext = await aesGcmEncrypt(
-                  content,
-                  settings.password
-                );
-
-                writable.write(cyphertext, 'utf8', () => resolve(settings));
-              });
-            } else {
-              console.log('Copying (non encrypted):', filePath);
-              readable.pipe(writable);
-
-              resolve(settings);
-            }
-          },
-        };
-
-        const destination = path.join(outputPath, filePath);
-        ncp(filePath, destination, options, (err) => {
-          if (err) return reject(err);
-
-          resolve(settings);
+          done(null, cyphertext);
         });
-      });
-    };
+      }
 
-    glob(settings.sources, (err, matches) => {
-      if (err) return reject(err);
-      // Creates two separate lists of file and folder paths
-      const { folders, files } = matches.reduce(
-        (paths, path) => {
-          const stats = fs.statSync(path);
-
-          if (stats.isDirectory()) {
-            paths.folders.push(path);
-          }
-
-          if (stats.isFile()) {
-            paths.files.push(path);
-          }
-
-          return paths;
-        },
-        {
-          folders: [],
-          files: [],
-        }
-      );
-
-      folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
-
-      Promise.all(files.map(copyFile))
-        .then(() => resolve(settings))
-        .catch(reject);
-    });
-  });
+      console.log('Copying (non encrypted):', src);
+      return null;
+    },
+  }).then(() => settings);
 }
 
 function addLogin(settings) {

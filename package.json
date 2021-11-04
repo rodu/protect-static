@@ -11,7 +11,8 @@
     "mkdirp": "^1.0.4",
     "ncp": "^2.0.0",
     "rc": "^1.2.8",
-    "recursive-copy": "^2.0.13"
+    "recursive-copy": "^2.0.13",
+    "through2": "^4.0.2"
   },
   "devDependencies": {
     "eslint": "^8.1.0",
