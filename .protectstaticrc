@@ -1,5 +1,4 @@
 {
-  "appBasePath": ".",
   "appDistFolder": "dist",
   "protectedDistFolder": "dist-protected",
   "encryptExtensions": [

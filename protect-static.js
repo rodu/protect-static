@@ -9,10 +9,10 @@ const md5 = require('md5');
 const pwGenerator = require('generate-password');
 
 const crypto = new Crypto();
+const appBasePath = process.cwd();
 
 function readSettings() {
   const settingsDefaults = {
-    appBasePath: '.',
     appDistFolder: 'app',
     protectedDistFolder: 'dist-protected',
     encryptExtensions: ['js', 'css', 'html'],
@@ -23,7 +23,7 @@ function readSettings() {
     throw new Error('appFolder and destFolder cannot have the same value!');
   }
 
-  const sources = `${settings.appBasePath}/${settings.appDistFolder}`;
+  const sources = `${appBasePath}/${settings.appDistFolder}`;
 
   return Promise.resolve({ ...settings, sources });
 }
@@ -51,25 +51,29 @@ function generatePassword(settings) {
  */
 function protect(settings) {
   const outputPath = path.join(
-    settings.appBasePath,
+    appBasePath,
     settings.protectedDistFolder,
     settings.appDistFolder
   );
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
+  const logCopy = (message, src) => {
+    console.log(`${message}: ${src.replace(appBasePath, '')}`);
+  };
 
   return copy(settings.sources, outputPath, {
     transform: (src) => {
       if (expr.test(path.extname(src))) {
         return through(async (chunk, enc, done) => {
           const content = chunk.toString();
-          console.log('Encrypting:', src);
+
+          logCopy('Encrypting', src);
           const cyphertext = await aesGcmEncrypt(content, settings.password);
 
           done(null, cyphertext);
         });
       }
 
-      console.log('Copying (non encrypted):', src);
+      logCopy('Copying (non encrypted)', src);
       return null;
     },
   }).then(() => settings);
