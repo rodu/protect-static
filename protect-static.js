@@ -57,9 +57,10 @@ function protect(settings) {
   );
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
   const logCopy = (message, src) => {
-    console.log(`${message}: ${src.replace(appBasePath, '')}`);
+    console.log(`\t${message}: ${src.replace(appBasePath, '')}`);
   };
 
+  console.log('\nProtecting assets:');
   return copy(settings.sources, outputPath, {
     transform: (src) => {
       if (expr.test(path.extname(src))) {
@@ -80,9 +81,34 @@ function protect(settings) {
 }
 
 function addLogin(settings) {
-  return new Promise((resolve, reject) => {
-    resolve(settings);
-  });
+  const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+  const sources = ['./index.html', './service-worker.js'];
+  console.log('\nAdding login page:');
+
+  return Promise.all(
+    sources.map((source) => {
+      return copy(source, path.join(outputPath, source), {
+        transform: (src) => {
+          return through(async (chunk, enc, done) => {
+            const content = chunk.toString();
+
+            console.log('\tCopying:', src);
+            // Replaces the RegExp to match GET requests in the service worker
+            // based on the project settings
+            const replacedContent = content
+              .toString()
+              .replace(/__APP_FOLDER__/, settings.appDistFolder)
+              .replace(
+                /__ENCRYPT_EXTENSIONS__/,
+                settings.encryptExtensions.join('|')
+              );
+
+            done(null, replacedContent);
+          });
+        },
+      });
+    })
+  ).then(() => settings);
 }
 
 function showCompletionInfo(settings) {
