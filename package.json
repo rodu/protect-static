@@ -10,9 +10,11 @@
     "glob": "^7.2.0",
     "mkdirp": "^1.0.4",
     "ncp": "^2.0.0",
-    "rc": "^1.2.8"
+    "rc": "^1.2.8",
+    "recursive-copy": "^2.0.13"
   },
   "devDependencies": {
+    "eslint": "^8.1.0",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "gulp-messenger": "^0.28.2",
