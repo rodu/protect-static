@@ -20,6 +20,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "protect-static": "./bin/protect-static.js"
+  },
+  "files": [
+    "index.html",
+    "service-worker.js",
+    "README.md",
+    "LICENSE.md"
+  ],
   "keywords": [],
   "author": "rodu",
   "license": "MIT"

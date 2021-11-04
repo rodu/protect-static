@@ -18,7 +18,7 @@ function readSettings() {
     encryptExtensions: ['js', 'css', 'html'],
   };
   const settings = rc('protectstatic', settingsDefaults);
-
+  console.dir(settings);
   if (settings.appDistFolder === settings.protectedDistFolder) {
     throw new Error('appFolder and destFolder cannot have the same value!');
   }
