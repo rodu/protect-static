@@ -32,12 +32,20 @@ function readSettings() {
   const settingsDefaults = {
     appDistFolder: 'app',
     protectedDistFolder: 'dist-protected',
-    encryptExtensions: ['js', 'css', 'html'],
+    encryptExtensions: 'html,css,js'.split(','),
   };
   const settings = rc('protectstatic', settingsDefaults);
 
   if (settings.appDistFolder === settings.protectedDistFolder) {
     throw new Error('appFolder and destFolder cannot have the same value!');
+  }
+
+  // Ensures extensions are in an Array format
+  if (!Array.isArray(settings.encryptExtensions)) {
+    // We may have received the extensions as a parameter
+    settings.encryptExtensions = settings.encryptExtensions
+      .split(',')
+      .map((s) => s.trim());
   }
 
   const sources = `./${settings.appDistFolder}/**`;

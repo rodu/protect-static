@@ -1,9 +1,5 @@
 {
   "appDistFolder": "dist",
   "protectedDistFolder": "dist-protected",
-  "encryptExtensions": [
-    "html",
-    "css",
-    "js"
-  ]
+  "encryptExtensions": "html,css,js"
 }
