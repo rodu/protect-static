@@ -1,8 +1,8 @@
 # ProtectStatic
 
-> Protect a single page app released at a public URL
+> Protect a static website released at a public URL
 
-This project provides a way to protect the sources of a single page app released on a publicly accessible website.
+This project provides a way to protect the sources of a static web site or single page app released on a publicly accessible URL.
 
 ## Disclaimer
 
