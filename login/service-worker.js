@@ -1,6 +1,6 @@
 /**
  * Decrypts ciphertext encrypted with aesGcmEncrypt() using supplied password.
- *                                                                      (c) Chris Veness MIT Licence
+ * (c) Chris Veness MIT Licence
  *
  * @param   {String} ciphertext - Ciphertext to be decrypted.
  * @param   {String} password - Password to use to decrypt ciphertext.
@@ -9,6 +9,8 @@
  * @example
  *   const plaintext = await aesGcmDecrypt(ciphertext, 'pw');
  *   aesGcmDecrypt(ciphertext, 'pw').then(function(plaintext) { console.log(plaintext); });
+ *
+ * @link https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
  */
 async function aesGcmDecrypt(ciphertext, password) {
   const pwUtf8 = new TextEncoder().encode(password); // encode password as UTF-8

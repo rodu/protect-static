@@ -202,7 +202,7 @@ module.exports = main;
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
- *                                                                      (c) Chris Veness MIT Licence
+ * (c) Chris Veness MIT Licence
  *
  * @param   {String} plaintext - Plaintext to be encrypted.
  * @param   {String} password - Password to use to encrypt plaintext.
@@ -211,6 +211,8 @@ module.exports = main;
  * @example
  *   const ciphertext = await aesGcmEncrypt('my secret text', 'pw');
  *   aesGcmEncrypt('my secret text', 'pw').then(function(ciphertext) { console.log(ciphertext); });
+ *
+ * @link https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
  */
 async function aesGcmEncrypt(plaintext, password) {
   const pwUtf8 = new TextEncoder().encode(password); // encode password as UTF-8
