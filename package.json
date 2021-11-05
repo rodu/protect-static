@@ -27,8 +27,8 @@
     "protect-static": "./bin/protect-static.js"
   },
   "files": [
-    "index.html",
-    "service-worker.js",
+    "login/index.html",
+    "login/service-worker.js",
     "README.md",
     "LICENSE.md"
   ],

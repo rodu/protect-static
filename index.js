@@ -146,13 +146,13 @@ async function protect(settings) {
 function addLogin(settings) {
   const outputPath = path.join(appBasePath, settings.protectedDistFolder);
   const modulePath = getModulePath();
-  const sources = ['./index.html', './service-worker.js'];
+  const sources = ['index.html', 'service-worker.js'];
   console.log('\nAdding login page:');
 
   return Promise.all(
     sources.map((source) => {
       return copy(
-        path.join(modulePath, source),
+        path.join(modulePath, 'login', source),
         path.join(outputPath, source),
         {
           transform: (src) => {
