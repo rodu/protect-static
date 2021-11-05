@@ -2,8 +2,9 @@
 const { Crypto } = require('node-webcrypto-ossl');
 const path = require('path');
 const fs = require('fs');
+const { promisify } = require('util');
 const del = require('del');
-const glob = require('glob');
+const glob = promisify(require('glob'));
 const mkdirp = require('mkdirp');
 const copy = require('recursive-copy');
 const { ncp } = require('ncp');
@@ -63,86 +64,82 @@ function generatePassword(settings) {
  * The protect task will make a copy of contents while encrypting the
  * files with the extensions matching the given list
  */
-function protect(settings) {
-  return new Promise((resolve, reject) => {
-    const outputPath = path.join(appBasePath, settings.protectedDistFolder);
-    const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
+async function protect(settings) {
+  const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+  const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
-    const copyFile = (filePath) => {
-      return new Promise((resolve, reject) => {
-        const options = {
-          clobber: true,
-          transform: (readable, writable) => {
-            if (expr.test(filePath)) {
-              const chunks = [];
+  const copyFile = (filePath) => {
+    return new Promise((resolve, reject) => {
+      const options = {
+        clobber: true,
+        transform: (readable, writable) => {
+          if (expr.test(filePath)) {
+            const chunks = [];
 
-              readable.on('readable', () => {
-                let chunk;
-                while (null !== (chunk = readable.read())) {
-                  chunks.push(chunk);
-                }
-              });
+            readable.on('readable', () => {
+              let chunk;
+              while (null !== (chunk = readable.read())) {
+                chunks.push(chunk);
+              }
+            });
 
-              readable.on('end', async () => {
-                const content = chunks.join('');
+            readable.on('end', async () => {
+              const content = chunks.join('');
 
-                logCopy('Encrypting', filePath);
-                const cyphertext = await aesGcmEncrypt(
-                  content,
-                  settings.password
-                );
+              logCopy('Encrypting', filePath);
+              const cyphertext = await aesGcmEncrypt(
+                content,
+                settings.password
+              );
 
-                writable.write(cyphertext, 'utf8', resolve);
-              });
-            } else {
-              logCopy('Copying (non encrypted)', filePath);
-              readable.pipe(writable);
+              writable.write(cyphertext, 'utf8', resolve);
+            });
+          } else {
+            logCopy('Copying (non encrypted)', filePath);
+            readable.pipe(writable);
 
-              resolve();
-            }
-          },
-        };
-
-        const destination = path.join(outputPath, filePath);
-
-        ncp(filePath, destination, options, (err) => {
-          if (err) return reject(err);
-
-          resolve();
-        });
-      });
-    };
-
-    glob(settings.sources, (err, matches) => {
-      if (err) return reject(err);
-      // Creates two separate lists of file and folder paths
-      const { folders, files } = matches.reduce(
-        (paths, path) => {
-          const stats = fs.statSync(path);
-
-          if (stats.isDirectory()) {
-            paths.folders.push(path);
+            resolve();
           }
-
-          if (stats.isFile()) {
-            paths.files.push(path);
-          }
-
-          return paths;
         },
-        {
-          folders: [],
-          files: [],
-        }
-      );
+      };
 
-      folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
+      const destination = path.join(outputPath, filePath);
 
-      Promise.all(files.map(copyFile))
-        .then(() => resolve(settings))
-        .catch(reject);
+      ncp(filePath, destination, options, (err) => {
+        if (err) return reject(err);
+
+        resolve();
+      });
     });
-  });
+  };
+
+  const matches = await glob(settings.sources);
+  // Creates two separate lists of file and folder paths
+  const { folders, files } = matches.reduce(
+    (paths, path) => {
+      const stats = fs.statSync(path);
+
+      if (stats.isDirectory()) {
+        paths.folders.push(path);
+      }
+
+      if (stats.isFile()) {
+        paths.files.push(path);
+      }
+
+      return paths;
+    },
+    {
+      folders: [],
+      files: [],
+    }
+  );
+
+  folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
+
+  await Promise.all(files.map(copyFile));
+
+  return settings;
 }
 
 function addLogin(settings) {
