@@ -108,9 +108,7 @@ async function protect(settings) {
             });
           } else {
             logCopy('Copying (non encrypted)', filePath);
-            readable.pipe(writable);
-
-            resolve();
+            readable.pipe(writable).on('end', resolve);
           }
         },
       };
