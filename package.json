@@ -2,7 +2,7 @@
   "name": "protect-static",
   "version": "1.0.0",
   "description": "",
-  "main": "./bin/protect-static.js",
+  "main": "index.js",
   "private": true,
   "dependencies": {
     "chalk": "^4.1.2",

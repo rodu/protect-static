@@ -188,7 +188,7 @@ function showCompletionInfo(settings) {
   return Promise.resolve(settings);
 }
 
-function protectStatic() {
+function main() {
   return readSettings()
     .then(clean)
     .then(generatePassword)
@@ -198,7 +198,7 @@ function protectStatic() {
     .catch((error) => console.error(error));
 }
 
-module.exports = protectStatic;
+module.exports = main;
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
