@@ -12,6 +12,7 @@ const rc = require('rc');
 const through = require('through2');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
+const chalk = require('chalk');
 
 const crypto = new Crypto();
 const appBasePath = process.cwd();
@@ -23,7 +24,7 @@ const getModulePath = () => {
   return fs.existsSync(expectedPath) ? expectedPath : cwd;
 };
 const logCopy = (message, src) => {
-  console.log(`\t${message}: ${src.replace(appBasePath, '')}`);
+  console.log(chalk.green(`\t${message}: ${src.replace(appBasePath, '')}`));
 };
 
 function readSettings() {
@@ -136,7 +137,7 @@ async function protect(settings) {
   );
 
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
-
+  console.log('\nProtecting assets:');
   await Promise.all(files.map(copyFile));
 
   return settings;
@@ -158,7 +159,7 @@ function addLogin(settings) {
             return through((chunk, enc, done) => {
               const content = chunk.toString();
 
-              logCopy('\tCopying', src);
+              logCopy('Copying', src);
               // Replaces the RegExp to match GET requests in the service worker
               // based on the project settings
               const replacedContent = content
@@ -179,9 +180,10 @@ function addLogin(settings) {
 }
 
 function showCompletionInfo(settings) {
-  console.log('\nUnlock password:', settings.password);
-  console.log(`Add this hash to the login URL: #${md5(settings.password)}`);
-  console.log('\nDone!');
+  console.log('\nCredentials:');
+  console.log('\tURL hash:', chalk.yellow.bold(`#${md5(settings.password)}`));
+  console.log('\tPassword:', chalk.yellow.bold(settings.password));
+  console.log(chalk.white.bold('\nDone!\n'));
 
   return Promise.resolve(settings);
 }
