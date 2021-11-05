@@ -13,6 +13,7 @@ const through = require('through2');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
 const chalk = require('chalk');
+const { version: versionNumber } = require('./package.json');
 
 const crypto = new Crypto();
 const appBasePath = process.cwd();
@@ -165,6 +166,7 @@ function addLogin(settings) {
               const replacedContent = content
                 .toString()
                 .replace(/__APP_FOLDER__/, settings.appDistFolder)
+                .replace(/__VERSION_NUMBER__/, versionNumber)
                 .replace(
                   /__ENCRYPT_EXTENSIONS__/,
                   settings.encryptExtensions.join('|')
