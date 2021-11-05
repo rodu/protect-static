@@ -37,7 +37,9 @@ function readSettings() {
   const settings = rc('protectstatic', settingsDefaults);
 
   if (settings.appDistFolder === settings.protectedDistFolder) {
-    throw new Error('appFolder and destFolder cannot have the same value!');
+    throw new Error(
+      'appDistFolder and protectedDistFolder cannot have the same value!'
+    );
   }
 
   // Ensures extensions are in an Array format
