@@ -26,23 +26,43 @@ The package is not released to NPM registry at this time and you can install dir
 
 ## Configuration Options
 
-Before we can encrypt out app sources, we need to indicate some configuration options to identify the folder containing sources, what sources to encrypt and where to put the output.
+We need to specify some configuration options to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
-To do that, you can create a `.protectstaticrc` file in your project and enter code like shown below:
+| Parameter           | Description                                                      | Default          |
+| ------------------- | ---------------------------------------------------------------- | ---------------- |
+| appDistFolder       | Folder containing the assets you want to publish and protect     | `app`            |
+| protectedDistFolder | Output folder where the login and protected sources will be      | `dist-protected` |
+| encryptExtensions   | Comma separated list of file extensions you want to be encrypted | `html,css,js`    |
+
+To specify your configuration, you can create a `.protectstaticrc` file in your project like shown below:
 
 ```json
 {
   "appDistFolder": "app",
   "protectedDistFolder": "dist-protected",
-  "encryptExtensions": ["html", "css", "js"]
+  "encryptExtensions": "html,css,js"
 }
 ```
 
-| Parameter           | Description                                                  | Default                 |
-| ------------------- | ------------------------------------------------------------ | ----------------------- |
-| appDistFolder       | Folder containing the assets you want to publish and protect | `app`                   |
-| protectedDistFolder | Output folder where the login and protected sources will be  | `dist-protected`        |
-| encryptExtensions   | Array of file extensions you want to be encrypted            | `['html', 'css', 'js']` |
+Command line arguments are also supported.
+
+You can use npx directy with command line arguments (in absence of the `.protectstaticrc` file):
+
+`npx protect-static --appDistFolder=dist --encryptExtensions=css,js`
+
+Or define an npm script like this:
+
+```json
+{
+  "scripts": {
+    ...
+    "protect-static": "protect-static --appDistFolder=dist --encryptExtensions=css,js"
+    ...
+  }
+}
+```
+
+And run it with: `npm run protect-static`
 
 ## How encryption takes place
 
@@ -69,29 +89,27 @@ When the user navigates to the public URL for the app, they must possess two thi
 
 The verification hash (md5) allows an initial validation of the password entered in the login input box, before proceeding any further.
 
-When the user enters the password and clicks the Unlock button, the procedure checks that the hash present in the URL matches with a hash of the password we entered. If the two hashes match, we know we have a valid password.
-
 Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[appDistFolder]/index.html` which represents the entry point of the app we are protecting.
 
 **Notice: The sources of the app are encrypted at rest (including the `index.html`).**
 
 ## How decryption takes place
 
-When the user is redirected to `/[appDistFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[appDistFolder]` folder for files with `.html`, `.css` and `.js` extension.
+When the user is redirected to `/[appDistFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[appDistFolder]` folder for files matching any of the `encryptExtensions` extension entries.
 
 For each `GET` request matching this criteria, the service worker proceeds to decrypt the `Response` text on the fly, using the AES-GCM algorithm and the password initially provided.
 
 When decryption succeeds, the service worker creates a new `Response` object containing the decrypted text for the content of the file and returns the `Response` to the browser.
 
-With the service worker, the decryption process happens entirely on the client-side and the browser is able to render the protected content as if it was never encrypted!
+With the service worker, the decryption process happens transparently and entirely on the client-side. The browser is able to render the protected content as if it was never encrypted!
 
-If someone would try to reach or scrap the protected app contents directly (say at /app/main.js), they would only see _gibberish_ from encrypted file contents.
+If someone would try to reach (or scrap) the protected app contents directly, they would only see _gibberish_ from encrypted file contents.
 
 ## Things to notice
 
 The Web Crypto API ([SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)) and [Sevice Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API) require (and only work) in a trusted environemnt, also known as [Secure Context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
 
-**The app must be seved under a valid HTTPS connection or from the localhost environment, for these APIs to work.**
+**The app must be seved under a valid HTTPS connection or from the localhost environment**, for these APIs to work.
 
 ## Resources
 
