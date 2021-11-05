@@ -91,8 +91,6 @@ The verification hash (md5) allows an initial validation of the password entered
 
 Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[appDistFolder]/index.html` which represents the entry point of the app we are protecting.
 
-**Notice: The sources of the app are encrypted at rest (including the `index.html`).**
-
 ## How decryption takes place
 
 When the user is redirected to `/[appDistFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[appDistFolder]` folder for files matching any of the `encryptExtensions` extension entries.
