@@ -1,3 +1,5 @@
+/* eslint-env serviceworker */
+/* global crypto */
 /**
  * Decrypts ciphertext encrypted with aesGcmEncrypt() using supplied password.
  * (c) Chris Veness MIT Licence
@@ -57,6 +59,15 @@ async function decryptContent(response) {
 const decryptUrlRegExp = new RegExp(
   '__APP_FOLDER__/.+\\.(__ENCRYPT_EXTENSIONS__)$'
 );
+
+self.addEventListener('install', function () {
+  // The promise that skipWaiting() returns can be safely ignored.
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
 
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
