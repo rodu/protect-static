@@ -1,7 +1,7 @@
 {
   "name": "protect-static",
   "version": "1.0.0",
-  "description": "",
+  "description": "Protect a single page app released at a public URL",
   "main": "index.js",
   "private": true,
   "dependencies": {
@@ -33,6 +33,6 @@
     "LICENSE.md"
   ],
   "keywords": [],
-  "author": "rodu",
+  "author": "rodu <3225111+rodu@users.noreply.github.com> (http://github.com/rodu)",
   "license": "MIT"
 }
