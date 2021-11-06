@@ -15,6 +15,7 @@ const pwGenerator = require('generate-password');
 const chalk = require('chalk');
 const { version: versionNumber } = require('./package.json');
 const { program } = require('commander');
+const prompt = require('prompt');
 
 // Defines the default argument values the program will fall-back to in absence
 // of coomand line arguments or values in the rc file
@@ -24,6 +25,7 @@ const rcArgs = rc('protectstatic', {
   encryptExtensions: 'html,css,js',
 });
 
+prompt.start();
 // Parsing of command line arguments with relative facilities
 program.version(versionNumber);
 
@@ -60,7 +62,7 @@ const logCopy = (message, src) => {
 };
 const terminateWithMessage = (message) => {
   console.log(chalk.red(message));
-  process.exit(1);
+  process.exit(0);
 };
 
 function readSettings() {
@@ -83,9 +85,26 @@ function readSettings() {
   return Promise.resolve({ ...settings, sources });
 }
 
-function clean(settings) {
-  // TODO: Add confirmation before deletion using 'prompt' module
-  return del(settings.destFolder).then(() => settings);
+async function clean(settings) {
+  const { destFolder } = settings;
+
+  if (fs.existsSync(destFolder)) {
+    console.log(chalk.green(`About to delete destination: ${destFolder}`));
+
+    const { answer } = await prompt.get({
+      description: 'Delete folder?',
+      name: 'answer',
+      default: 'y/N',
+    });
+
+    if (/^y$/i.test(answer)) {
+      await del(destFolder);
+    } else {
+      terminateWithMessage('Will stop there.');
+    }
+  }
+
+  return settings;
 }
 
 function generatePassword(settings) {
