@@ -1,5 +1,6 @@
 {
   "sourceFolder": "dist",
   "destFolder": "dist-protected",
-  "encryptExtensions": "html,css,js"
+  "encryptExtensions": "html,css,js",
+  "skipPrompt": false
 }

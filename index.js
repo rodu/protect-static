@@ -23,6 +23,7 @@ const rcArgs = rc('protectstatic', {
   sourceFolder: './app',
   destFolder: './app-protected',
   encryptExtensions: 'html,css,js',
+  skipPrompt: false,
 });
 
 prompt.start();
@@ -45,6 +46,11 @@ program
     '-e, --encryptExtensions <string>',
     'comma separated list of file extensions to encrypt',
     rcArgs.encryptExtensions
+  )
+  .option(
+    '-y, --skipPrompt',
+    'assumes yes answer for any prompt',
+    rcArgs.skipPrompt
   )
   .parse();
 
@@ -89,18 +95,23 @@ async function clean(settings) {
   const { destFolder } = settings;
 
   if (fs.existsSync(destFolder)) {
-    console.log(chalk.green(`About to delete destination: ${destFolder}`));
-
-    const { answer } = await prompt.get({
-      description: 'Delete folder?',
-      name: 'answer',
-      default: 'y/N',
-    });
-
-    if (/^y$/i.test(answer)) {
+    if (settings.skipPrompt) {
+      console.log(chalk.green(`Deleting destination: ${destFolder}`));
       await del(destFolder);
     } else {
-      terminateWithMessage('Will stop there.');
+      console.log(chalk.green(`About to delete destination: ${destFolder}`));
+
+      const { answer } = await prompt.get({
+        description: 'Delete folder?',
+        name: 'answer',
+        default: 'y/N',
+      });
+
+      if (/^y$/i.test(answer)) {
+        await del(destFolder);
+      } else {
+        terminateWithMessage('Will stop there.');
+      }
     }
   }
 

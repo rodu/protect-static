@@ -33,6 +33,7 @@ Configuration options allow to identify the folder containing our app sources, w
 | sourceFolder      | Folder containing assets to protect                | `./app`           |
 | destFolder        | Folder where the protected assets will be          | `./app-protected` |
 | encryptExtensions | Comma separated list of file extensions to encrypt | `html,css,js`     |
+| skipPrompt        | Assumes yes answer for any prompt                  | `false`           |
 
 **Notice:** An rc file `.protectstaticrc` (if present) can override these defaults
 
@@ -58,6 +59,7 @@ Options:
   -s, --sourceFolder <path>         folder containing assets to protect
   -d, --destFolder <path>           folder where the protected assets will be
   -e, --encryptExtensions <string>  comma separated list of file extensions to encrypt
+  -y, --skipPrompt                  assumes yes answer for any prompt
   -h, --help                        display help for command
 ```
 
