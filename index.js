@@ -161,16 +161,17 @@ async function protect(settings) {
         },
       };
 
-      const destination = path.join(outputPath, filePath);
-
       if (!fs.existsSync(filePath)) {
         terminateWithMessage(`Cannot find source file at:\n${filePath}`);
       }
 
-      if (!fs.existsSync(destination)) {
-        terminateWithMessage(`Cannot find destination at:\n${destination}`);
+      if (!fs.existsSync(outputPath)) {
+        terminateWithMessage(
+          `Cannot find destination folder at:\n${outputPath}`
+        );
       }
 
+      const destination = path.join(outputPath, filePath);
       ncp(filePath, destination, options, (err) => {
         if (err) return reject(err);
 
