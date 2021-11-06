@@ -28,18 +28,18 @@ The package is not released to NPM registry at this time and you can install dir
 
 We need to specify some configuration options to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
-| Parameter           | Description                                                      | Default          |
-| ------------------- | ---------------------------------------------------------------- | ---------------- |
-| appDistFolder       | Folder containing the assets you want to publish and protect     | `app`            |
-| protectedDistFolder | Output folder where the login and protected sources will be      | `dist-protected` |
-| encryptExtensions   | Comma separated list of file extensions you want to be encrypted | `html,css,js`    |
+| Parameter         | Description                                                      | Default          |
+| ----------------- | ---------------------------------------------------------------- | ---------------- |
+| sourceFolder      | Folder containing the assets you want to protect                 | `app`            |
+| destFolder        | Output folder where the login and protected assets will be       | `dist-protected` |
+| encryptExtensions | Comma separated list of file extensions you want to be encrypted | `html,css,js`    |
 
 To specify your configuration, you can create a `.protectstaticrc` file in your project like shown below:
 
 ```json
 {
-  "appDistFolder": "app",
-  "protectedDistFolder": "dist-protected",
+  "sourceFolder": "app",
+  "destFolder": "dist-protected",
   "encryptExtensions": "html,css,js"
 }
 ```
@@ -48,7 +48,7 @@ Command line arguments are also supported.
 
 You can use npx directy with command line arguments (in absence of the `.protectstaticrc` file):
 
-`npx protect-static --appDistFolder=dist --encryptExtensions=css,js`
+`npx protect-static --sourceFolder=dist --encryptExtensions=css,js`
 
 Or define an npm script like this:
 
@@ -56,7 +56,7 @@ Or define an npm script like this:
 {
   "scripts": {
     ...
-    "protect-static": "protect-static --appDistFolder=dist --encryptExtensions=css,js"
+    "protect-static": "protect-static --sourceFolder=dist --encryptExtensions=css,js"
     ...
   }
 }
@@ -66,13 +66,13 @@ And run it with: `npm run protect-static`
 
 ## How encryption takes place
 
-The web app we want to protect should have its own build process (if any) and in any case provide a folder of sources ready to be released (`appDistFolder`).
+The web app we want to protect should have its own build process (if any) and in any case provide a folder of sources ready to be released (`sourceFolder`).
 
 The solution protects the release sources by encrypting them using the [AES-GCM algorithm](https://isuruka.medium.com/selecting-the-best-aes-block-cipher-mode-aes-gcm-vs-aes-cbc-ee3ebae173c).
 
 The script looks for the encryption password in a `PROTECT_STATIC_KEY` environment variable. If a value is not set, **the script will automatically generate a strong password** and show it later.
 
-The script copies the app source files to a release-ready folder (`protectedDistFolder/appDistFolder`), while encrypting the contents. The output folder will also include a login page, alongside a service worker script (more on that later).
+The script copies the app source files to a release-ready folder (`destFolder/sourceFolder`), while encrypting the contents. The output folder will also include a login page, alongside a service worker script (more on that later).
 
 After the encryption/copy, the script outputs the password that was used and a _password verification hash_ that we need to add to the URL of our app, like this:
 
@@ -89,13 +89,13 @@ When the user navigates to the public URL for the app, they must possess two thi
 
 The verification hash (md5) allows an initial validation of the password entered in the login input box, before proceeding any further.
 
-Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[appDistFolder]/index.html` which represents the entry point of the app we are protecting.
+Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[sourceFolder]/index.html` which represents the entry point of the app we are protecting.
 
 **Notice: The sources of the app are encrypted at rest (including the `index.html`).**
 
 ## How decryption takes place
 
-When the user is redirected to `/[appDistFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[appDistFolder]` folder for files matching any of the `encryptExtensions` extension entries.
+When the user is redirected to `/[sourceFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[sourceFolder]` folder for files matching any of the `encryptExtensions` extension entries.
 
 For each `GET` request matching this criteria, the service worker proceeds to decrypt the `Response` text on the fly, using the AES-GCM algorithm and the password initially provided.
 

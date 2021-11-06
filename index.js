@@ -34,16 +34,14 @@ const terminateWithMessage = (message) => {
 
 function readSettings() {
   const settingsDefaults = {
-    appDistFolder: 'app',
-    protectedDistFolder: 'dist-protected',
+    sourceFolder: 'app',
+    destFolder: 'dist-protected',
     encryptExtensions: 'html,css,js'.split(','),
   };
   const settings = rc('protectstatic', settingsDefaults);
 
-  if (settings.appDistFolder === settings.protectedDistFolder) {
-    throw new Error(
-      'appDistFolder and protectedDistFolder cannot have the same value!'
-    );
+  if (settings.sourceFolder === settings.destFolder) {
+    throw new Error('sourceFolder and destFolder cannot have the same value!');
   }
 
   // Ensures extensions are in an Array format
@@ -54,14 +52,14 @@ function readSettings() {
       .map((s) => s.trim());
   }
 
-  const sources = `./${settings.appDistFolder}/**`;
+  const sources = `./${settings.sourceFolder}/**`;
 
   return Promise.resolve({ ...settings, sources });
 }
 
 function clean(settings) {
   // TODO: Add confirmation before deletion using 'prompt' module
-  return del(settings.protectedDistFolder).then(() => settings);
+  return del(settings.destFolder).then(() => settings);
 }
 
 function generatePassword(settings) {
@@ -82,7 +80,7 @@ function generatePassword(settings) {
  * files with the extensions matching the given list
  */
 async function protect(settings) {
-  const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+  const outputPath = path.join(appBasePath, settings.destFolder);
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
   const copyFile = (filePath) => {
@@ -162,6 +160,7 @@ async function protect(settings) {
     terminateWithMessage('There are no files to protect!');
   }
 
+  console.log('\nProtecting assets:');
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
   console.log('\nProtecting assets:');
   await Promise.all(files.map(copyFile));
@@ -170,7 +169,7 @@ async function protect(settings) {
 }
 
 function addLogin(settings) {
-  const outputPath = path.join(appBasePath, settings.protectedDistFolder);
+  const outputPath = path.join(appBasePath, settings.destFolder);
   const modulePath = getModulePath();
   const sources = ['index.html', 'service-worker.js'];
   console.log('\nAdding login page:');
@@ -190,7 +189,7 @@ function addLogin(settings) {
               // based on the project settings
               const replacedContent = content
                 .toString()
-                .replace(/__APP_FOLDER__/, settings.appDistFolder)
+                .replace(/__APP_FOLDER__/, settings.sourceFolder)
                 .replace(/__VERSION_NUMBER__/, versionNumber)
                 .replace(
                   /__ENCRYPT_EXTENSIONS__/,
