@@ -78,7 +78,7 @@ function readSettings() {
       .map((s) => s.trim());
   }
 
-  const sources = `./${settings.sourceFolder}/**`;
+  const sources = path.join(settings.sourceFolder, '**');
 
   return Promise.resolve({ ...settings, sources });
 }
