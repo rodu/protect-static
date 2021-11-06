@@ -1,8 +1,8 @@
 # ProtectStatic
 
-> Protect a single page app released at a public URL
+> Protect a static website released at a public URL
 
-This project provides a way to protect the sources of a single page app released on a publicly accessible website.
+This project provides a way to protect the sources of a static web site or single page app released on a publicly accessible URL.
 
 ## Disclaimer
 
@@ -90,8 +90,6 @@ When the user navigates to the public URL for the app, they must possess two thi
 The verification hash (md5) allows an initial validation of the password entered in the login input box, before proceeding any further.
 
 Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[sourceFolder]/index.html` which represents the entry point of the app we are protecting.
-
-**Notice: The sources of the app are encrypted at rest (including the `index.html`).**
 
 ## How decryption takes place
 
