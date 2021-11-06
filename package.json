@@ -3,7 +3,6 @@
   "version": "1.1.0-0",
   "description": "Protect a single page app released at a public URL",
   "main": "index.js",
-  "private": true,
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^8.3.0",
@@ -34,7 +33,11 @@
     "README.md",
     "LICENSE.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodu/protect-static.git"
+  },
   "keywords": [],
-  "author": "Robbie Schioppa <3225111+rodu@users.noreply.github.com> (http://github.com/rodu)",
+  "author": "Robbie Schioppa (http://github.com/rodu)",
   "license": "MIT"
 }

@@ -89,7 +89,7 @@ The solution protects the release sources by encrypting them using the [AES-GCM 
 
 The script looks for the encryption password in a `PROTECT_STATIC_KEY` environment variable. If a value is not set, **the script will automatically generate a strong password** and show it later.
 
-The script copies the app source files to a release-ready folder (`destFolder/sourceFolder`), while encrypting the contents. The output folder will also include a login page, alongside a service worker script (more on that later).
+The script copies the app source files to a release-ready folder (`destFolder`), while encrypting the contents. The output folder will also include a login page, alongside a service worker script used for decrypting contents on the fly (more on that later).
 
 After the encryption/copy, the script outputs the password that was used and a _password verification hash_ that we need to add to the URL of our app, like this:
 
@@ -110,7 +110,7 @@ Once the password validates, the (readable password) value is passed on to a ser
 
 ## How decryption takes place
 
-When the user is redirected to `/[sourceFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[sourceFolder]` folder for files matching any of the `encryptExtensions` extension entries.
+When the user is redirected to `/[sourceFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[sourceFolder]` folder for files matching any of the `encryptExtensions` entries.
 
 For each `GET` request matching this criteria, the service worker proceeds to decrypt the `Response` text on the fly, using the AES-GCM algorithm and the password initially provided.
 
