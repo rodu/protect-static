@@ -27,6 +27,10 @@ const getModulePath = () => {
 const logCopy = (message, src) => {
   console.log(chalk.green(`\t${message}: ${src.replace(appBasePath, '')}`));
 };
+const terminateWithMessage = (message) => {
+  console.log(chalk.red(message));
+  process.exit(1);
+};
 
 function readSettings() {
   const settingsDefaults = {
@@ -56,6 +60,7 @@ function readSettings() {
 }
 
 function clean(settings) {
+  // TODO: Add confirmation before deletion using 'prompt' module
   return del(settings.protectedDistFolder).then(() => settings);
 }
 
@@ -115,6 +120,14 @@ async function protect(settings) {
 
       const destination = path.join(outputPath, filePath);
 
+      if (!fs.existsSync(filePath)) {
+        terminateWithMessage(`Cannot find source file at:\n${filePath}`);
+      }
+
+      if (!fs.existsSync(destination)) {
+        terminateWithMessage(`Cannot find destination at:\n${destination}`);
+      }
+
       ncp(filePath, destination, options, (err) => {
         if (err) return reject(err);
 
@@ -144,6 +157,10 @@ async function protect(settings) {
       files: [],
     }
   );
+
+  if (files.length === 0) {
+    terminateWithMessage('There are no files to protect!');
+  }
 
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
   console.log('\nProtecting assets:');
