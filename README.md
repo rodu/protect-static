@@ -26,15 +26,19 @@ The package is not released to NPM registry at this time and you can install dir
 
 ## Configuration Options
 
-We need to specify some configuration options to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
+Configuration options allow to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
-| Parameter         | Description                                         | Default           |
-| ----------------- | --------------------------------------------------- | ----------------- |
-| sourceFolder      | Folder containing assets to protect                 | `./app`           |
-| destFolder        | Folder where the login and protected assets will be | `./app-protected` |
-| encryptExtensions | Comma separated list of file extensions to encrypt  | `html,css,js`     |
+| Parameter         | Description                                        | Default           |
+| ----------------- | -------------------------------------------------- | ----------------- |
+| sourceFolder      | Folder containing assets to protect                | `./app`           |
+| destFolder        | Folder where the protected assets will be          | `./app-protected` |
+| encryptExtensions | Comma separated list of file extensions to encrypt | `html,css,js`     |
 
-To specify your configuration, you can create a `.protectstaticrc` file in your project like shown below:
+**Notice:** An rc file `.protectstaticrc` (if present) can override these defaults
+
+### Specifying an rc file for confguration
+
+You can use a `.protectstaticrc` file in your project to specify the default configuration.
 
 ```json
 {
@@ -44,9 +48,20 @@ To specify your configuration, you can create a `.protectstaticrc` file in your 
 }
 ```
 
-Command line arguments are also supported.
+### Command line options
 
-You can use npx directy with command line arguments (in absence of the `.protectstaticrc` file):
+Explicit command line options take precendence over the the rc file values (if present)
+
+```text
+Options:
+  -V, --version                     output the version number
+  -s, --sourceFolder <path>         folder containing assets to protect
+  -d, --destFolder <path>           folder where the protected assets will be
+  -e, --encryptExtensions <string>  comma separated list of file extensions to encrypt
+  -h, --help                        display help for command
+```
+
+You can use npx directy with command line arguments:
 
 `npx protect-static --sourceFolder=dist --encryptExtensions=css,js`
 
