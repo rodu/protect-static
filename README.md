@@ -28,11 +28,11 @@ The package is not released to NPM registry at this time and you can install dir
 
 We need to specify some configuration options to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
-| Parameter         | Description                                                      | Default          |
-| ----------------- | ---------------------------------------------------------------- | ---------------- |
-| sourceFolder      | Folder containing the assets you want to protect                 | `app`            |
-| destFolder        | Output folder where the login and protected assets will be       | `dist-protected` |
-| encryptExtensions | Comma separated list of file extensions you want to be encrypted | `html,css,js`    |
+| Parameter         | Description                                         | Default           |
+| ----------------- | --------------------------------------------------- | ----------------- |
+| sourceFolder      | Folder containing assets to protect                 | `./app`           |
+| destFolder        | Folder where the login and protected assets will be | `./app-protected` |
+| encryptExtensions | Comma separated list of file extensions to encrypt  | `html,css,js`     |
 
 To specify your configuration, you can create a `.protectstaticrc` file in your project like shown below:
 

@@ -14,6 +14,37 @@ const md5 = require('md5');
 const pwGenerator = require('generate-password');
 const chalk = require('chalk');
 const { version: versionNumber } = require('./package.json');
+const { program } = require('commander');
+
+// Defines the default argument values the program will fall-back to in absence
+// of coomand line arguments or values in the rc file
+const rcArgs = rc('protectstatic', {
+  sourceFolder: './app',
+  destFolder: './app-protected',
+  encryptExtensions: 'html,css,js',
+});
+
+// Parsing of command line arguments with relative facilities
+program.version(versionNumber);
+
+// Command line arguments override the rc file values
+program
+  .option(
+    '-s, --sourceFolder <path>',
+    'folder containing assets to protect',
+    rcArgs.sourceFolder
+  )
+  .option(
+    '-d, --destFolder <path>',
+    'folder where the login and protected assets will be',
+    rcArgs.destFolder
+  )
+  .option(
+    '-e, --encryptExtensions <string>',
+    'comma separated list of file extensions to encrypt',
+    rcArgs.encryptExtensions
+  )
+  .parse();
 
 const crypto = new Crypto();
 const appBasePath = process.cwd();
@@ -33,15 +64,10 @@ const terminateWithMessage = (message) => {
 };
 
 function readSettings() {
-  const settingsDefaults = {
-    sourceFolder: 'app',
-    destFolder: 'dist-protected',
-    encryptExtensions: 'html,css,js'.split(','),
-  };
-  const settings = rc('protectstatic', settingsDefaults);
+  const settings = program.opts();
 
   if (settings.sourceFolder === settings.destFolder) {
-    throw new Error('sourceFolder and destFolder cannot have the same value!');
+    throw new Error('sourceFolder and destFolder cannot be at the same path!');
   }
 
   // Ensures extensions are in an Array format
@@ -162,7 +188,6 @@ async function protect(settings) {
 
   console.log('\nProtecting assets:');
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
-  console.log('\nProtecting assets:');
   await Promise.all(files.map(copyFile));
 
   return settings;
