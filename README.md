@@ -16,11 +16,9 @@ The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/We
 
 ## Install
 
-In your project (the one you want to publish and protect) run:
+In your project (the one you want to protect) run:
 
-The package is not released to NPM registry at this time and you can install directly from GitHub:
-
-`npm install --save-dev git+https://github.com/rodu/protect-static.git`
+`npm install --save-dev protect-static@beta`
 
 **Note:** During the install, you may notice lots of text being printed out. That's output from the `node-webcrypto-ossl` and it's perfectly normal.
 
@@ -44,7 +42,7 @@ You can use a `.protectstaticrc` file in your project to specify the default con
 ```json
 {
   "sourceFolder": "app",
-  "destFolder": "dist-protected",
+  "destFolder": "app-protected",
   "encryptExtensions": "html,css,js"
 }
 ```
