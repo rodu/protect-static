@@ -13,6 +13,7 @@ const through = require('through2');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
 const chalk = require('chalk');
+const terminalLink = require('terminal-link');
 const { version: versionNumber } = require('./package.json');
 const { program } = require('commander');
 const prompt = require('prompt');
@@ -269,10 +270,13 @@ function addLogin(settings) {
 
 function showCompletionInfo(settings) {
   console.log('\nCredentials:');
+
+  const previewUrl = `${settings.hostUrl}#${md5(settings.password)}`;
   console.log(
     '\tHost URL:',
-    chalk.yellow.bold(`${settings.hostUrl}#${md5(settings.password)}`)
+    chalk.yellow.bold(terminalLink(previewUrl, previewUrl))
   );
+
   console.log('\tPassword:', chalk.yellow.bold(settings.password));
   console.log(chalk.white.bold('\nDone!\n'));
 

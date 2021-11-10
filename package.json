@@ -16,6 +16,7 @@
     "prompt": "^1.2.0",
     "rc": "1.2.8",
     "recursive-copy": "^2.0.13",
+    "terminal-link": "^2.1.1",
     "through2": "^4.0.2"
   },
   "devDependencies": {
