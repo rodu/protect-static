@@ -6,7 +6,19 @@ This project provides a way to protect the sources of a static web site or singl
 
 ## Disclaimer
 
-THE AUTHOR IS **NOT AN EXPERT** IN SUBJECTS OF SECURITY OR CRYPTOGRAPHY. USE AT YOUR OWN RISK.
+THE AUTHOR IS **NOT AN EXPERT** IN SUBJECTS OF SECURITY OR CRYPTOGRAPHY. NO WARRANTY IS IMPLIED AS STATED BY THE LICENSE TERMS BELOW.
+
+---
+
+- [Overview](#overview)
+- [Install](#install)
+- [Configuration and usage](#configuration-and-usage)
+- [How encryption takes place](#how-encryption-takes-place)
+- [How the login works](#how-the-login-works)
+- [How decryption takes place](#how-decryption-takes-place)
+- [Things to notice](#things-to-notice)
+- [Resources](#resources)
+- [License](#license)
 
 ## Overview
 
@@ -20,9 +32,7 @@ In your project (the one you want to protect) run:
 
 `npm install --save-dev protect-static@beta`
 
-**Note:** During the install, you may notice lots of text being printed out. That's output from the `node-webcrypto-ossl` and it's perfectly normal.
-
-## Configuration Options
+## Configuration and usage
 
 Configuration options allow to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
@@ -38,7 +48,9 @@ Configuration options allow to identify the folder containing our app sources, w
 
 ### Specifying an rc file for confguration
 
-You can use a `.protectstaticrc` file in your project to specify the default configuration that should be used. Any of the parameters from the table above can be declared here.
+You can use a `.protectstaticrc` file in your project to specify the default configuration that should be used.
+
+Any of the parameters from the table above can be declared to override the defaults.
 
 ```json
 {
@@ -63,9 +75,11 @@ Options:
   -h, --help                        display help for command
 ```
 
-You can use npx directy with command line arguments:
+### Usage
 
-`npx protect-static --sourceFolder=dist --encryptExtensions=css,js`
+You can use npx directy, in combination with command line arguments or the `.protectstaticrc` file:
+
+`npx protect-static --encryptExtensions=css,js`
 
 Or define an npm script like this:
 
@@ -73,7 +87,7 @@ Or define an npm script like this:
 {
   "scripts": {
     ...
-    "protect-static": "protect-static --sourceFolder=dist --encryptExtensions=css,js"
+    "protect-static": "protect-static"
     ...
   }
 }
