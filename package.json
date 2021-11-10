@@ -38,7 +38,13 @@
     "type": "git",
     "url": "git+https://github.com/rodu/protect-static.git"
   },
-  "keywords": [],
+  "keywords": [
+    "static",
+    "html",
+    "password",
+    "protect",
+    "encrypt"
+  ],
   "author": "Robbie Schioppa (http://github.com/rodu)",
   "license": "MIT"
 }
