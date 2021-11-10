@@ -26,18 +26,19 @@ In your project (the one you want to protect) run:
 
 Configuration options allow to identify the folder containing our app sources, what sources to encrypt and where to generate the output.
 
-| Parameter         | Description                                        | Default           |
-| ----------------- | -------------------------------------------------- | ----------------- |
-| sourceFolder      | Folder containing assets to protect                | `./app`           |
-| destFolder        | Folder where the protected assets will be          | `./app-protected` |
-| encryptExtensions | Comma separated list of file extensions to encrypt | `html,css,js`     |
-| skipPrompt        | Assumes yes answer for any prompt                  | `false`           |
+| Parameter         | Description                                        | Default                  |
+| ----------------- | -------------------------------------------------- | ------------------------ |
+| sourceFolder      | Folder containing assets to protect                | `./app`                  |
+| destFolder        | Folder where the protected assets will be          | `./app-protected`        |
+| encryptExtensions | Comma separated list of file extensions to encrypt | `html,css,js`            |
+| skipPrompt        | Assumes yes answer for any prompt                  | `false`                  |
+| hostUrl           | Helper to generate protected app URL in output     | `http://localhost:8080/` |
 
 **Notice:** An rc file `.protectstaticrc` (if present) can override these defaults
 
 ### Specifying an rc file for confguration
 
-You can use a `.protectstaticrc` file in your project to specify the default configuration.
+You can use a `.protectstaticrc` file in your project to specify the default configuration that should be used. Any of the parameters from the table above can be declared here.
 
 ```json
 {
@@ -58,6 +59,7 @@ Options:
   -d, --destFolder <path>           folder where the protected assets will be
   -e, --encryptExtensions <string>  comma separated list of file extensions to encrypt
   -y, --skipPrompt                  assumes yes answer for any prompt
+  -u, --hostUrl <url>               helper to generate protected app URL
   -h, --help                        display help for command
 ```
 

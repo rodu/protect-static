@@ -24,6 +24,7 @@ const rcArgs = rc('protectstatic', {
   destFolder: './app-protected',
   encryptExtensions: 'html,css,js',
   skipPrompt: false,
+  hostUrl: 'http://localhost:8080/',
 });
 
 prompt.start();
@@ -51,6 +52,11 @@ program
     '-y, --skipPrompt',
     'assumes yes answer for any prompt',
     rcArgs.skipPrompt
+  )
+  .option(
+    '-u, --hostUrl <url>',
+    'helper to generate protected app URL',
+    rcArgs.hostUrl
   )
   .parse();
 
@@ -87,7 +93,7 @@ function readSettings() {
   }
 
   const sources = path.join(settings.sourceFolder, '**');
-
+  console.log(settings);
   return Promise.resolve({ ...settings, sources });
 }
 
@@ -263,7 +269,10 @@ function addLogin(settings) {
 
 function showCompletionInfo(settings) {
   console.log('\nCredentials:');
-  console.log('\tURL hash:', chalk.yellow.bold(`#${md5(settings.password)}`));
+  console.log(
+    '\tHost URL:',
+    chalk.yellow.bold(`${settings.hostUrl}#${md5(settings.password)}`)
+  );
   console.log('\tPassword:', chalk.yellow.bold(settings.password));
   console.log(chalk.white.bold('\nDone!\n'));
 
