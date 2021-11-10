@@ -2,11 +2,7 @@
 
 > Protect a static website released at a public URL
 
-This project provides a way to protect the sources of a static web site or single page app released on a publicly accessible URL.
-
-## Disclaimer
-
-THE AUTHOR IS **NOT AN EXPERT** IN SUBJECTS OF SECURITY OR CRYPTOGRAPHY. NO WARRANTY IS IMPLIED AS STATED BY THE LICENSE TERMS BELOW.
+<img src="https://raw.githubusercontent.com/rodu/protect-static/main/protect-static.png" alt="ProtectStatic diagram" style="display: block; margin: 0 auto; border: 0; max-width:910px; width: 100%;">
 
 ---
 
@@ -22,6 +18,8 @@ THE AUTHOR IS **NOT AN EXPERT** IN SUBJECTS OF SECURITY OR CRYPTOGRAPHY. NO WARR
 
 ## Overview
 
+This project provides a way to protect the sources of a static web site or single page app released on a publicly accessible URL.
+
 When working on a project, we may need to give access to a restricted number of users or a customer. With **ProtectStatic** we can release a single page app (or a static website) to a public URL, while ensuring our sources remain secure from unintended audience.
 
 The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any textual file content.
@@ -30,7 +28,7 @@ The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/We
 
 In your project (the one you want to protect) run:
 
-`npm install --save-dev protect-static@beta`
+`npm install --save-dev protect-static`
 
 ## Configuration and usage
 
