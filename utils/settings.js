@@ -53,6 +53,14 @@ module.exports = {
   },
 
   readSettings(argv = process.argv) {
-    return Promise.resolve(this.parseCLIOptions(argv));
+    const result = this.parseCLIOptions(argv);
+
+    if (result.sourceFolder === result.destFolder) {
+      throw new Error(
+        'sourceFolder and destFolder cannot be at the same path!'
+      );
+    }
+
+    return Promise.resolve(result);
   },
 };

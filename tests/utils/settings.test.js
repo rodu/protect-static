@@ -55,6 +55,12 @@ describe('utils/settings', () => {
         expect(result.sourceFolder).to.equal('app');
         expect(result.destFolder).to.equal('destination');
       });
+
+      it('should throw when source and destination are the same', () => {
+        const argv = ['', '', '--sourceFolder=app', '--destFolder=app'];
+
+        expect(() => settings.readSettings(argv)).to.throw();
+      });
     });
   });
 });
