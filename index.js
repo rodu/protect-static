@@ -295,6 +295,10 @@ function main() {
 
 module.exports = main;
 
+module.exports._test = {
+  readSettings,
+};
+
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
  * (c) Chris Veness MIT Licence
