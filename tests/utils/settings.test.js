@@ -18,9 +18,9 @@ describe('utils/settings', () => {
     });
     after(() => sandbox.restore());
 
-    it('should return the default settings', () => {
+    it('should return the default settings', async () => {
       const argv = ['', ''];
-      const result = settings.readSettings(argv);
+      const result = await settings.readSettings(argv);
 
       expect(result.sourceFolder).to.equal('abc');
       expect(result.destFolder).to.equal('def');
@@ -39,18 +39,18 @@ describe('utils/settings', () => {
     });
     after(() => sandbox.restore());
 
-    it('should inherit the rc settings in the command line options', () => {
+    it('should inherit the rc settings in the command line options', async () => {
       const argv = ['', ''];
-      const result = settings.readSettings(argv);
+      const result = await settings.readSettings(argv);
 
       expect(result.sourceFolder).to.equal('source');
       expect(result.destFolder).to.equal('destination');
     });
 
     describe('When there are command line options', () => {
-      it('should override the default settings', () => {
+      it('should override the default settings', async () => {
         const argv = ['', '', '--sourceFolder=app'];
-        const result = settings.readSettings(argv);
+        const result = await settings.readSettings(argv);
 
         expect(result.sourceFolder).to.equal('app');
         expect(result.destFolder).to.equal('destination');

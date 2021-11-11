@@ -53,6 +53,6 @@ module.exports = {
   },
 
   readSettings(argv = process.argv) {
-    return this.parseCLIOptions(argv);
+    return Promise.resolve(this.parseCLIOptions(argv));
   },
 };
