@@ -65,6 +65,14 @@ const api = {
       );
     }
 
+    // Ensures extensions are in an Array format
+    if (!Array.isArray(options.encryptExtensions)) {
+      // We may have received the extensions as a parameter
+      options.encryptExtensions = options.encryptExtensions
+        .split(',')
+        .map((s) => s.trim());
+    }
+
     return Promise.resolve(options);
   },
 };
