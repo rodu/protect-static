@@ -8,59 +8,16 @@ const glob = promisify(require('glob'));
 const mkdirp = require('mkdirp');
 const copy = require('recursive-copy');
 const { ncp } = require('ncp');
-const rc = require('rc');
 const through = require('through2');
 const md5 = require('md5');
 const pwGenerator = require('generate-password');
 const chalk = require('chalk');
 const terminalLink = require('terminal-link');
 const { version: versionNumber } = require('./package.json');
-const { program } = require('commander');
 const prompt = require('prompt');
-
-// Defines the default argument values the program will fall-back to in absence
-// of coomand line arguments or values in the rc file
-const rcArgs = rc('protectstatic', {
-  sourceFolder: './app',
-  destFolder: './app-protected',
-  encryptExtensions: 'html,css,js',
-  skipPrompt: false,
-  hostUrl: 'http://localhost:8080/',
-});
+const settings = require('./utils/settings');
 
 prompt.start();
-// Parsing of command line arguments with relative facilities
-program.version(versionNumber);
-
-// Command line arguments override the rc file values
-program
-  .option(
-    '-s, --sourceFolder <path>',
-    'folder containing assets to protect',
-    rcArgs.sourceFolder
-  )
-  .option(
-    '-d, --destFolder <path>',
-    'folder where the login and protected assets will be',
-    rcArgs.destFolder
-  )
-  .option(
-    '-e, --encryptExtensions <string>',
-    'comma separated list of file extensions to encrypt',
-    rcArgs.encryptExtensions
-  )
-  .option(
-    '-y, --skipPrompt',
-    'assumes yes answer for any prompt',
-    rcArgs.skipPrompt
-  )
-  .option(
-    '-u, --hostUrl <url>',
-    'helper to generate protected app URL',
-    rcArgs.hostUrl
-  )
-  .parse();
-
 const crypto = new Crypto();
 const appBasePath = process.cwd();
 
@@ -77,26 +34,6 @@ const terminateWithMessage = (message) => {
   console.log(chalk.red(message));
   process.exit(0);
 };
-
-function readSettings() {
-  const settings = program.opts();
-
-  if (settings.sourceFolder === settings.destFolder) {
-    throw new Error('sourceFolder and destFolder cannot be at the same path!');
-  }
-
-  // Ensures extensions are in an Array format
-  if (!Array.isArray(settings.encryptExtensions)) {
-    // We may have received the extensions as a parameter
-    settings.encryptExtensions = settings.encryptExtensions
-      .split(',')
-      .map((s) => s.trim());
-  }
-
-  const sources = path.join(settings.sourceFolder, '**');
-  console.log(settings);
-  return Promise.resolve({ ...settings, sources });
-}
 
 async function clean(settings) {
   const { destFolder } = settings;
@@ -198,7 +135,7 @@ async function protect(settings) {
     });
   };
 
-  const matches = await glob(settings.sources);
+  const matches = await glob(path.join(settings.sourceFolder, '**'));
   // Creates two separate lists of file and folder paths
   const { folders, files } = matches.reduce(
     (paths, path) => {
@@ -284,7 +221,8 @@ function showCompletionInfo(settings) {
 }
 
 function main() {
-  return readSettings()
+  return settings
+    .readSettings()
     .then(clean)
     .then(generatePassword)
     .then(protect)
@@ -294,10 +232,6 @@ function main() {
 }
 
 module.exports = main;
-
-module.exports._test = {
-  readSettings,
-};
 
 /**
  * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().

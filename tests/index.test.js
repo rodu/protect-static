@@ -1,8 +1,3 @@
-const { expect } = require('chai');
-const { _test } = require('../index');
+/* eslint-env mocha */
 
-describe('When reading the settings', () => {
-  it('should behave...', () => {
-    expect(true).to.equal(true);
-  });
-});
+describe('When reading the settings', () => {});

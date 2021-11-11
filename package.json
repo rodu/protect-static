@@ -36,6 +36,7 @@
   "files": [
     "login/index.html",
     "login/service-worker.js",
+    "utils/settings.js",
     "README.md",
     "LICENSE.md"
   ],

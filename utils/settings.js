@@ -10,12 +10,10 @@ const defaultSettings = {
   hostUrl: 'http://localhost:8080/',
 };
 
-const api = {
-  parsedOptions: { opts: () => ({}) },
-
+class Settings {
   readRcFile() {
     return rc('protectstatic', defaultSettings);
-  },
+  }
 
   parseOptions(argv) {
     const rcArgs = this.readRcFile();
@@ -51,13 +49,10 @@ const api = {
         rcArgs.hostUrl
       )
       .parse(argv);
-  },
+  }
 
   readSettings(argv = process.argv) {
-    const parsedOptions = process.env.PROTECT_STATIC_TEST_ENV
-      ? this.parseOptions(argv)
-      : this.parsedOptions;
-    const options = parsedOptions.opts();
+    const options = this.parseOptions(argv).opts();
 
     if (options.sourceFolder === options.destFolder) {
       throw new Error(
@@ -74,11 +69,7 @@ const api = {
     }
 
     return Promise.resolve(options);
-  },
-};
-
-if (!process.env.PROTECT_STATIC_TEST_ENV) {
-  api.parseOptions(process.argv);
+  }
 }
 
-module.exports = api;
+module.exports = new Settings();
