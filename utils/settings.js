@@ -10,12 +10,14 @@ const defaultSettings = {
   hostUrl: 'http://localhost:8080/',
 };
 
-module.exports = {
+const api = {
+  parsedOptions: { opts: () => ({}) },
+
   readRcFile() {
     return rc('protectstatic', defaultSettings);
   },
 
-  parseCLIOptions(argv) {
+  parseOptions(argv) {
     const rcArgs = this.readRcFile();
 
     // Parsing of command line arguments with relative facilities
@@ -48,19 +50,27 @@ module.exports = {
         'helper to generate protected app URL',
         rcArgs.hostUrl
       )
-      .parse(argv)
-      .opts();
+      .parse(argv);
   },
 
   readSettings(argv = process.argv) {
-    const result = this.parseCLIOptions(argv);
+    const parsedOptions = process.env.PROTECT_STATIC_TEST_ENV
+      ? this.parseOptions(argv)
+      : this.parsedOptions;
+    const options = parsedOptions.opts();
 
-    if (result.sourceFolder === result.destFolder) {
+    if (options.sourceFolder === options.destFolder) {
       throw new Error(
         'sourceFolder and destFolder cannot be at the same path!'
       );
     }
 
-    return Promise.resolve(result);
+    return Promise.resolve(options);
   },
 };
+
+if (!process.env.PROTECT_STATIC_TEST_ENV) {
+  api.parseOptions(process.argv);
+}
+
+module.exports = api;
