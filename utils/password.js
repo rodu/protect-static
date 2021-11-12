@@ -11,14 +11,14 @@ class PasswordUtils {
     this.envPassword = process.env.PROTECT_STATIC_KEY;
   }
 
-  generatePassword() {
+  _generatePassword() {
     return pwGenerator.generate(pwOptions);
   }
 
   getPassword(settings) {
     return Promise.resolve({
       ...settings,
-      password: this.envPassword || this.generatePassword(),
+      password: this.envPassword || this._generatePassword(),
     });
   }
 }

@@ -43,7 +43,9 @@ describe('utils/password', () => {
       passwordUtils = new PasswordUtils();
 
       sandbox = sinon.createSandbox();
-      sandbox.stub(passwordUtils, 'generatePassword').returns('randomPassword');
+      sandbox
+        .stub(passwordUtils, '_generatePassword')
+        .returns('randomPassword');
     });
     after(() => sandbox.restore());
 
