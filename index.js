@@ -16,6 +16,7 @@ const { version: versionNumber } = require('./package.json');
 const prompt = require('prompt');
 const settings = require('./utils/settings');
 const { PasswordUtils } = require('./utils/password');
+const { pipeline } = require('stream');
 
 prompt.start();
 const crypto = new Crypto();
@@ -104,7 +105,13 @@ async function protect(settings) {
             });
           } else {
             logCopy('Copying (non encrypted)', filePath);
-            readable.pipe(writable).on('end', resolve);
+            pipeline(readable, writable, (err) => {
+              if (err) {
+                throw new Error(err);
+              } else {
+                resolve();
+              }
+            });
           }
         },
       };
@@ -121,9 +128,11 @@ async function protect(settings) {
 
       const destination = path.join(outputPath, filePath);
       ncp(filePath, destination, options, (err) => {
-        if (err) return reject(err);
-
-        resolve();
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       });
     });
   };
@@ -156,9 +165,10 @@ async function protect(settings) {
 
   console.log('\nProtecting assets:');
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
-  await Promise.all(files.map(copyFile));
 
-  return settings;
+  return Promise.all(files.map(copyFile))
+    .then(() => settings)
+    .catch((err) => console.error(err));
 }
 
 function addLogin(settings) {
