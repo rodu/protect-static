@@ -81,31 +81,24 @@ async function protect(settings) {
     return new Promise((resolve, reject) => {
       const options = {
         clobber: true,
-        transform: (readable, writable) => {
+        transform: async (readable, writable) => {
           if (expr.test(filePath)) {
             const chunks = [];
 
-            readable.on('readable', () => {
-              let chunk;
-              while (null !== (chunk = readable.read())) {
-                chunks.push(chunk);
-              }
-            });
+            // Reads the stream treating it as an async iterator
+            for await (const chunk of readable) {
+              chunks.push(chunk);
+            }
 
-            readable.on('end', async () => {
-              const content = chunks.join('');
+            const content = chunks.join('');
 
-              logCopy('Encrypting', filePath);
-              const cyphertext = await aesGcmEncrypt(
-                content,
-                settings.password
-              );
+            logCopy('Encrypting', filePath);
+            const cyphertext = await aesGcmEncrypt(content, settings.password);
 
-              writable.write(cyphertext, 'utf8', (err) => {
-                if (err) throw err;
+            writable.write(cyphertext, 'utf8', (err) => {
+              if (err) throw err;
 
-                resolve();
-              });
+              resolve();
             });
           } else {
             logCopy('Copying (non encrypted)', filePath);
