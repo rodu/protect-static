@@ -81,6 +81,7 @@ async function protect(settings) {
     return new Promise((resolve, reject) => {
       const options = {
         clobber: true,
+        stopOnErr: true,
         transform: async (readable, writable) => {
           if (expr.test(filePath)) {
             const chunks = [];
