@@ -101,7 +101,11 @@ async function protect(settings) {
                 settings.password
               );
 
-              writable.write(cyphertext, 'utf8', resolve);
+              writable.write(cyphertext, 'utf8', (err) => {
+                if (err) throw err;
+
+                resolve();
+              });
             });
           } else {
             logCopy('Copying (non encrypted)', filePath);
