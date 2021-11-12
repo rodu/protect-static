@@ -11,12 +11,12 @@ const defaultSettings = {
 };
 
 class Settings {
-  readRcFile() {
+  _readRcFile() {
     return rc('protectstatic', defaultSettings);
   }
 
-  parseOptions(argv) {
-    const rcArgs = this.readRcFile();
+  _parseOptions(argv) {
+    const rcArgs = this._readRcFile();
 
     // Parsing of command line arguments with relative facilities
     program.version(versionNumber);
@@ -52,7 +52,7 @@ class Settings {
   }
 
   readSettings(argv = process.argv) {
-    const options = this.parseOptions(argv).opts();
+    const options = this._parseOptions(argv).opts();
 
     if (options.sourceFolder === options.destFolder) {
       throw new Error(

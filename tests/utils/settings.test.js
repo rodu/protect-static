@@ -15,7 +15,7 @@ describe('utils/settings', () => {
 
     before(() => {
       sandbox = sinon.createSandbox();
-      sandbox.stub(settings, 'readRcFile').returns(mockDefaults);
+      sandbox.stub(settings, '_readRcFile').returns(mockDefaults);
     });
     after(() => sandbox.restore());
 
@@ -33,7 +33,7 @@ describe('utils/settings', () => {
 
     before(() => {
       sandbox = sinon.createSandbox();
-      sandbox.stub(settings, 'readRcFile').returns({
+      sandbox.stub(settings, '_readRcFile').returns({
         sourceFolder: 'source',
         destFolder: 'destination',
       });
