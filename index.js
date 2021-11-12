@@ -10,12 +10,12 @@ const copy = require('recursive-copy');
 const { ncp } = require('ncp');
 const through = require('through2');
 const md5 = require('md5');
-const pwGenerator = require('generate-password');
 const chalk = require('chalk');
 const terminalLink = require('terminal-link');
 const { version: versionNumber } = require('./package.json');
 const prompt = require('prompt');
 const settings = require('./utils/settings');
+const { PasswordUtils } = require('./utils/password');
 
 prompt.start();
 const crypto = new Crypto();
@@ -62,17 +62,10 @@ async function clean(settings) {
   return settings;
 }
 
-function generatePassword(settings) {
-  return Promise.resolve({
-    ...settings,
-    password:
-      process.env.PROTECT_STATIC_KEY ||
-      pwGenerator.generate({
-        length: 30,
-        numbers: true,
-        symbols: true,
-      }),
-  });
+function getPassword(settings) {
+  const passwordUtils = new PasswordUtils();
+
+  return passwordUtils.getPassword(settings);
 }
 
 /**
@@ -224,7 +217,7 @@ function main() {
   return settings
     .readSettings()
     .then(clean)
-    .then(generatePassword)
+    .then(getPassword)
     .then(protect)
     .then(addLogin)
     .then(showCompletionInfo)
