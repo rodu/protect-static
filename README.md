@@ -12,6 +12,7 @@
 - [How encryption takes place](#how-encryption-takes-place)
 - [How the login works](#how-the-login-works)
 - [How decryption takes place](#how-decryption-takes-place)
+- [Ensuring resources load correctly](#ensuring-resources-load-correctly)
 - [Things to notice](#things-to-notice)
 - [Resources](#resources)
 - [License](#license)
@@ -22,7 +23,7 @@ This project provides a way to protect the sources of a static web site or singl
 
 When working on a project, we may need to give access to a restricted number of users or a customer. With **ProtectStatic** we can release a single page app (or a static website) to a public URL, while ensuring our sources remain secure from unintended audience.
 
-The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any textual file content.
+The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any textual file content.
 
 ## Install
 
@@ -95,8 +96,6 @@ And run it with: `npm run protect-static`
 
 ## How encryption takes place
 
-The web app we want to protect should have its own build process (if any) and in any case provide a folder of sources ready to be released (`sourceFolder`).
-
 The solution protects the release sources by encrypting them using the [AES-GCM algorithm](https://isuruka.medium.com/selecting-the-best-aes-block-cipher-mode-aes-gcm-vs-aes-cbc-ee3ebae173c).
 
 The script looks for the encryption password in a `PROTECT_STATIC_KEY` environment variable. If a value is not set, **the script will automatically generate a strong password** and show it later.
@@ -131,6 +130,33 @@ When decryption succeeds, the service worker creates a new `Response` object con
 With the service worker, the decryption process happens transparently and entirely on the client-side. The browser is able to render the protected content as if it was never encrypted!
 
 If someone would try to reach (or scrap) the protected app contents directly, they would only see _gibberish_ from encrypted file contents.
+
+## Ensuring resources load correctly
+
+When running the protected app **you may get 404 Not Found** erorrs for some resources. In that case, you need to fix something with your URLs.
+
+As you may have noticed, after running the `protect-static` the base of your app becomes the login page. Your app contents are generated within a subfolder of that, matching the original `sourceFolder` parameter.
+
+An example output could be as follows:
+
+- `https://my-secure-host/index.html` (the login page)
+- `https://my-secure-host/app/index.html` (your app entry point under `/app`)
+
+For your app to be able to load resources, such as external CSS, images, or JavaScript sources, you must ensure that absolute URLs are configured correctly, when present. In some cases, the `BASE_URL` (or `PUBLIC_URL`) env variables can be configured (in this example to be `/app/`) when running the build (if you have one).
+
+Having your app pointing at a resource such as `/scripts/main.js` **will result in a 404 Not Found error**. That's because the correct url after protect-static may have become something like `/app/scripts/main.js` depending on your configuration.
+
+To that extent, your handy npm command may be changed to something like:
+
+```json
+{
+  "protect-static": "PUBLIC_URL=/app/ npm run build && protect-static"
+}
+```
+
+Where the example `app` value here should match your `sourceFolder` value.
+
+In general, non-absolute URLs (like in `scripts/main.js` with no leading `/`) should work out of the box.
 
 ## Things to notice
 
