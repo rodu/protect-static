@@ -25,6 +25,14 @@ When working on a project, we may need to give access to a restricted number of 
 
 The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any textual file content.
 
+### Demo
+
+You can see a [demo](https://rodu.github.io/protect-static-demo/#47b7bfb65fa83ac9a71dcb0f6296bb6e) of a basic Gatsby app released on GitHub Pages and protected with ProtectStatic.
+
+**Unlock key:** `Passw0rd!`
+
+Here's the [GitHub repository](https://github.com/rodu/protect-static-demo) for the demo if you want to take a look.
+
 ## Install
 
 In your project (the one you want to protect) run:
