@@ -7,7 +7,6 @@ const del = require('del');
 const glob = promisify(require('glob'));
 const mkdirp = require('mkdirp');
 const copy = require('recursive-copy');
-const { ncp } = require('ncp');
 const through = require('through2');
 const md5 = require('md5');
 const chalk = require('chalk');
@@ -77,62 +76,45 @@ async function protect(settings) {
   const outputPath = path.join(appBasePath, settings.destFolder);
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
-  const copyFile = (filePath) => {
-    return new Promise((resolve, reject) => {
-      const options = {
-        clobber: true,
-        stopOnErr: true,
-        transform: async (readable, writable) => {
-          if (expr.test(filePath)) {
-            const chunks = [];
+  const copyFile = async (filePath) => {
+    if (!fs.existsSync(filePath)) {
+      terminateWithMessage(`Cannot find source file at:\n${filePath}`);
+    }
 
-            // Reads the stream treating it as an async iterator
-            for await (const chunk of readable) {
-              chunks.push(chunk);
-            }
+    if (!fs.existsSync(outputPath)) {
+      terminateWithMessage(`Cannot find destination folder at:\n${outputPath}`);
+    }
 
-            const content = chunks.join('');
+    const destination = path.join(outputPath, filePath);
 
-            logCopy('Encrypting', filePath);
-            const cyphertext = await aesGcmEncrypt(content, settings.password);
+    const readable = fs.createReadStream(filePath);
+    const writable = fs.createWriteStream(destination);
 
-            writable.write(cyphertext, 'utf8', (err) => {
-              if (err) throw err;
-
-              resolve();
-            });
-          } else {
-            logCopy('Copying (non encrypted)', filePath);
-            pipeline(readable, writable, (err) => {
-              if (err) {
-                throw new Error(err);
-              } else {
-                resolve();
-              }
-            });
-          }
-        },
-      };
-
-      if (!fs.existsSync(filePath)) {
-        terminateWithMessage(`Cannot find source file at:\n${filePath}`);
+    if (expr.test(filePath)) {
+      const chunks = [];
+      for await (const chunk of readable) {
+        chunks.push(chunk);
       }
 
-      if (!fs.existsSync(outputPath)) {
-        terminateWithMessage(
-          `Cannot find destination folder at:\n${outputPath}`
-        );
-      }
+      const content = chunks.join('');
+      logCopy('Encrypting', filePath);
+      const cyphertext = await aesGcmEncrypt(content, settings.password);
 
-      const destination = path.join(outputPath, filePath);
-      ncp(filePath, destination, options, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
+      return new Promise((resolve, reject) => {
+        writable.on('finish', resolve);
+
+        writable.write(cyphertext, (err) => {
+          if (err) reject(err);
+        });
+
+        writable.end();
       });
-    });
+    } else {
+      logCopy('Copying (non encrypted)', filePath);
+      const asyncPipeline = promisify(pipeline);
+
+      return asyncPipeline(readable, writable);
+    }
   };
 
   const matches = await glob(path.join(settings.sourceFolder, '**'));
