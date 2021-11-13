@@ -51,6 +51,7 @@ Configuration options allow to identify the folder containing our app sources, w
 | indexFile         | Index file used for your app or website            | `index.html`             |
 | skipPrompt        | Assumes yes answer for any prompt                  | `false`                  |
 | hostUrl           | Helper to generate protected app URL in output     | `http://localhost:8080/` |
+| quiet             | Print only relevant messages to console            | `false`                  |
 
 **Notice:** An rc file `.protectstaticrc` (if present) can override these defaults
 
@@ -81,6 +82,7 @@ Options:
   -i, --indexFile <string>          index file used for your app or website
   -y, --skipPrompt                  assumes yes answer for any prompt
   -u, --hostUrl <url>               helper to generate protected app URL
+  -q, --quiet                       print only relevant messages to console
   -h, --help                        display help for command
 ```
 

@@ -9,6 +9,7 @@ const defaultSettings = {
   indexFile: 'index.html',
   skipPrompt: false,
   hostUrl: 'http://localhost:8080/',
+  quiet: false,
 };
 
 class Settings {
@@ -53,6 +54,11 @@ class Settings {
         '-u, --hostUrl <url>',
         'helper to generate protected app URL',
         rcArgs.hostUrl
+      )
+      .option(
+        '-q, --quiet',
+        'print only relevant messages to console',
+        rcArgs.quiet
       )
       .parse(argv);
   }

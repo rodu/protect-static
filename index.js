@@ -94,7 +94,7 @@ async function protect(settings) {
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
   const transform = (filePath) => {
     if (expr.test(filePath)) {
-      logCopy('Encrypting', filePath);
+      if (!settings.quiet) logCopy('Encrypting', filePath);
       counters.encryptedFiles += 1;
 
       return new Transform({
@@ -112,7 +112,7 @@ async function protect(settings) {
       });
     }
 
-    logCopy('Copying (non-encrypted)', filePath);
+    if (!settings.quiet) logCopy('Copying (non-encrypted)', filePath);
     counters.copiedFiles += 1;
 
     return null;
@@ -124,7 +124,7 @@ async function protect(settings) {
     settings.sourceFolder
   );
 
-  console.log('\nProtecting assets:');
+  console.log('\nProtecting assets');
   await copy(settings.sourceFolder, outputPath, { transform });
 
   return settings;
@@ -135,7 +135,7 @@ async function addLogin(settings) {
   const modulePath = getModulePath();
   const sources = ['index.html', 'service-worker.js'];
   const transform = (src) => {
-    logCopy('Copying', src);
+    if (!settings.quiet) logCopy('Copying', src);
 
     return new Transform({
       transform(chunk, enc, done) {
@@ -157,7 +157,7 @@ async function addLogin(settings) {
     });
   };
 
-  console.log('\nAdding login page:');
+  console.log('\nAdding login page');
   for (const source of sources) {
     await copy(
       path.join(modulePath, 'login', source),
@@ -170,7 +170,7 @@ async function addLogin(settings) {
 }
 
 function showCompletionInfo(settings) {
-  console.log('\nCredentials:');
+  console.log('\nCredentials');
 
   const previewUrl = `${settings.hostUrl}#${md5(settings.password)}`;
   console.log(
