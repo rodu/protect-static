@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const del = require('del');
 const copy = require('recursive-copy');
-const through = require('through2');
 const md5 = require('md5');
 const chalk = require('chalk');
 const terminalLink = require('terminal-link');
@@ -124,34 +123,35 @@ async function addLogin(settings) {
   const outputPath = path.join(appBasePath, settings.destFolder);
   const modulePath = getModulePath();
   const sources = ['index.html', 'service-worker.js'];
-  console.log('\nAdding login page:');
+  const transform = (src) => {
+    logCopy('Copying', src);
 
+    return new Transform({
+      transform(chunk, enc, done) {
+        const content = chunk.toString();
+        // Replaces the RegExp to match GET requests in the service worker
+        // based on the project settings
+        const replacedContent = content
+          .toString()
+          .replace(/__APP_FOLDER__/, settings.sourceFolder)
+          .replace(/__INDEX_FILE__/, settings.indexFile)
+          .replace(/__VERSION_NUMBER__/, versionNumber)
+          .replace(
+            /__ENCRYPT_EXTENSIONS__/,
+            settings.encryptExtensions.join('|')
+          );
+
+        done(null, replacedContent);
+      },
+    });
+  };
+
+  console.log('\nAdding login page:');
   for (const source of sources) {
     await copy(
       path.join(modulePath, 'login', source),
       path.join(outputPath, source),
-      {
-        transform: (src) => {
-          return through((chunk, enc, done) => {
-            const content = chunk.toString();
-
-            logCopy('Copying', src);
-            // Replaces the RegExp to match GET requests in the service worker
-            // based on the project settings
-            const replacedContent = content
-              .toString()
-              .replace(/__APP_FOLDER__/, settings.sourceFolder)
-              .replace(/__INDEX_FILE__/, settings.indexFile)
-              .replace(/__VERSION_NUMBER__/, versionNumber)
-              .replace(
-                /__ENCRYPT_EXTENSIONS__/,
-                settings.encryptExtensions.join('|')
-              );
-
-            done(null, replacedContent);
-          });
-        },
-      }
+      { transform }
     );
   }
 
