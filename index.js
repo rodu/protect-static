@@ -30,9 +30,16 @@ const terminateWithMessage = (message) => {
   console.log(chalk.red(message));
   process.exit(0);
 };
+const counters = {
+  copiedFiles: 0,
+  encryptedFiles: 0,
+};
 
 async function clean(settings) {
   const { destFolder } = settings;
+
+  // Reset the counters
+  counters.copiedFiles = counters.encryptedFiles = 0;
 
   if (fs.existsSync(destFolder)) {
     if (settings.skipPrompt) {
@@ -88,6 +95,8 @@ async function protect(settings) {
   const transform = (filePath) => {
     if (expr.test(filePath)) {
       logCopy('Encrypting', filePath);
+      counters.encryptedFiles += 1;
+
       return new Transform({
         async transform(chunk, enc, done) {
           const plaintext = chunk.toString();
@@ -104,6 +113,8 @@ async function protect(settings) {
     }
 
     logCopy('Copying (non-encrypted)', filePath);
+    counters.copiedFiles += 1;
+
     return null;
   };
 
@@ -168,6 +179,10 @@ function showCompletionInfo(settings) {
   );
 
   console.log('\tPassword:', chalk.yellow.bold(settings.password));
+  console.log(chalk.white.bold(`\nEncrypted: ${counters.encryptedFiles}`));
+  console.log(
+    chalk.white.bold(`Copied (non-encrypted): ${counters.copiedFiles}`)
+  );
   console.log(chalk.white.bold('\nDone!\n'));
 
   return Promise.resolve(settings);
