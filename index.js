@@ -93,12 +93,12 @@ async function protect(settings) {
           const plaintext = chunk.toString();
           const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
           const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8);
-          let ciphertext = Buffer.from(new Uint8Array(ctBuffer)).toString(
+          let cipherChunk = Buffer.from(new Uint8Array(ctBuffer)).toString(
             'base64'
           );
 
           // Prepends the iv string to the first chunk only
-          done(null, '--CHUNK--' + ivBase64 + ciphertext);
+          done(null, ivBase64 + cipherChunk);
         },
       });
     }
