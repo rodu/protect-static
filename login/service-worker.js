@@ -45,7 +45,12 @@ async function aesGcmDecrypt(ciphertext, password) {
 let password;
 async function decryptContent(response) {
   const ciphertext = await response.text();
-  const decrypted = await aesGcmDecrypt(ciphertext, password);
+  const chunks = ciphertext.split('--CHUNK--').filter(Boolean);
+
+  let decrypted = '';
+  for (const chunk of chunks) {
+    decrypted += await aesGcmDecrypt(chunk, password);
+  }
 
   const { status, statusText, headers } = response;
   return new Response(decrypted, {

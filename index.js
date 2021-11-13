@@ -76,6 +76,9 @@ async function protect(settings) {
   const outputPath = path.join(appBasePath, settings.destFolder);
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
 
+  const pwUtf8 = new TextEncoder().encode(settings.password); // encode password as UTF-8
+  const pwHash = await crypto.subtle.digest('SHA-256', pwUtf8); // hash the password
+
   const copyFile = async (filePath) => {
     if (!fs.existsSync(filePath)) {
       terminateWithMessage(`Cannot find source file at:\n${filePath}`);
@@ -84,37 +87,40 @@ async function protect(settings) {
     if (!fs.existsSync(outputPath)) {
       terminateWithMessage(`Cannot find destination folder at:\n${outputPath}`);
     }
+    /**
+     * Encrypts plaintext using AES-GCM with supplied password, for decryption
+     * with aesGcmDecrypt(). (c) Chris Veness MIT Licence
+     *
+     * @link
+     * https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
+     */
+    const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
+    const alg = { name: 'AES-GCM', iv }; // specify algorithm to use
+    const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
+      'encrypt',
+    ]); // generate key from pw
+    const ivBase64 = Buffer.from(iv).toString('base64');
+
+    // NOTICE: This function is used as a transform stream and CANNOT BE ASYNC
+    const transform = (src) => {
+      logCopy('Encrypting', src);
+      return through(async (chunk, enc, done) => {
+        const plaintext = chunk.toString();
+        const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
+        const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8);
+        let ciphertext = Buffer.from(new Uint8Array(ctBuffer)).toString(
+          'base64'
+        );
+
+        // Prepends the iv string to the first chunk only
+        done(null, '--CHUNK--' + ivBase64 + ciphertext);
+      });
+    };
 
     const destination = path.join(outputPath, filePath);
+    const copyOptions = expr.test(filePath) ? { transform } : void 0;
 
-    const readable = fs.createReadStream(filePath);
-    const writable = fs.createWriteStream(destination);
-
-    if (expr.test(filePath)) {
-      const chunks = [];
-      for await (const chunk of readable) {
-        chunks.push(chunk);
-      }
-
-      const content = chunks.join('');
-      logCopy('Encrypting', filePath);
-      const cyphertext = await aesGcmEncrypt(content, settings.password);
-
-      return new Promise((resolve, reject) => {
-        writable.on('finish', resolve);
-
-        writable.write(cyphertext, (err) => {
-          if (err) reject(err);
-        });
-
-        writable.end();
-      });
-    } else {
-      logCopy('Copying (non encrypted)', filePath);
-      const asyncPipeline = promisify(pipeline);
-
-      return asyncPipeline(readable, writable);
-    }
+    return copy(filePath, destination, copyOptions);
   };
 
   const matches = await glob(path.join(settings.sourceFolder, '**'));
@@ -218,36 +224,3 @@ function main() {
 }
 
 module.exports = main;
-
-/**
- * Encrypts plaintext using AES-GCM with supplied password, for decryption with aesGcmDecrypt().
- * (c) Chris Veness MIT Licence
- *
- * @param   {String} plaintext - Plaintext to be encrypted.
- * @param   {String} password - Password to use to encrypt plaintext.
- * @returns {String} Encrypted ciphertext.
- *
- * @example
- *   const ciphertext = await aesGcmEncrypt('my secret text', 'pw');
- *   aesGcmEncrypt('my secret text', 'pw').then(function(ciphertext) { console.log(ciphertext); });
- *
- * @link https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
- */
-async function aesGcmEncrypt(plaintext, password) {
-  const pwUtf8 = new TextEncoder().encode(password); // encode password as UTF-8
-  const pwHash = await crypto.subtle.digest('SHA-256', pwUtf8); // hash the password
-
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
-  const alg = { name: 'AES-GCM', iv: iv }; // specify algorithm to use
-  const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
-    'encrypt',
-  ]); // generate key from pw
-
-  const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
-  const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8); // encrypt plaintext using key
-
-  return (
-    Buffer.from(iv).toString('base64') +
-    Buffer.from(new Uint8Array(ctBuffer)).toString('base64')
-  );
-}
