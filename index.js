@@ -12,6 +12,7 @@ const { version: versionNumber } = require('./package.json');
 const prompt = require('prompt');
 const settings = require('./utils/settings');
 const { PasswordUtils } = require('./utils/password');
+const { Transform } = require('stream');
 
 prompt.start();
 const crypto = new Crypto();
@@ -88,20 +89,22 @@ async function protect(settings) {
   const transform = (filePath) => {
     if (expr.test(filePath)) {
       logCopy('Encrypting', filePath);
+      return new Transform({
+        async transform(chunk, enc, done) {
+          const plaintext = chunk.toString();
+          const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
+          const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8);
+          let ciphertext = Buffer.from(new Uint8Array(ctBuffer)).toString(
+            'base64'
+          );
 
-      return through(async (chunk, enc, done) => {
-        const plaintext = chunk.toString();
-        const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
-        const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8);
-        let ciphertext = Buffer.from(new Uint8Array(ctBuffer)).toString(
-          'base64'
-        );
-
-        // Prepends the iv string to the first chunk only
-        done(null, '--CHUNK--' + ivBase64 + ciphertext);
+          // Prepends the iv string to the first chunk only
+          done(null, '--CHUNK--' + ivBase64 + ciphertext);
+        },
       });
     }
 
+    logCopy('Copying (non-encrypted)', filePath);
     return null;
   };
 
