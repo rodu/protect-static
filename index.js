@@ -2,10 +2,7 @@
 const { Crypto } = require('node-webcrypto-ossl');
 const path = require('path');
 const fs = require('fs');
-const { promisify } = require('util');
 const del = require('del');
-const glob = promisify(require('glob'));
-const mkdirp = require('mkdirp');
 const copy = require('recursive-copy');
 const through = require('through2');
 const md5 = require('md5');
@@ -15,7 +12,6 @@ const { version: versionNumber } = require('./package.json');
 const prompt = require('prompt');
 const settings = require('./utils/settings');
 const { PasswordUtils } = require('./utils/password');
-const { pipeline } = require('stream');
 
 prompt.start();
 const crypto = new Crypto();
@@ -73,37 +69,26 @@ function getPassword(settings) {
  * files with the extensions matching the given list
  */
 async function protect(settings) {
-  const outputPath = path.join(appBasePath, settings.destFolder);
-  const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
-
+  /**
+   * Encrypts plaintext using AES-GCM with supplied password, for decryption
+   * with aesGcmDecrypt(). (c) Chris Veness MIT Licence
+   *
+   * @link
+   * https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
+   */
   const pwUtf8 = new TextEncoder().encode(settings.password); // encode password as UTF-8
   const pwHash = await crypto.subtle.digest('SHA-256', pwUtf8); // hash the password
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
+  const alg = { name: 'AES-GCM', iv }; // specify algorithm to use
+  const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
+    'encrypt',
+  ]); // generate key from pw
+  const ivBase64 = Buffer.from(iv).toString('base64');
+  const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
+  const transform = (filePath) => {
+    if (expr.test(filePath)) {
+      logCopy('Encrypting', filePath);
 
-  const copyFile = async (filePath) => {
-    if (!fs.existsSync(filePath)) {
-      terminateWithMessage(`Cannot find source file at:\n${filePath}`);
-    }
-
-    if (!fs.existsSync(outputPath)) {
-      terminateWithMessage(`Cannot find destination folder at:\n${outputPath}`);
-    }
-    /**
-     * Encrypts plaintext using AES-GCM with supplied password, for decryption
-     * with aesGcmDecrypt(). (c) Chris Veness MIT Licence
-     *
-     * @link
-     * https://gist.github.com/chrisveness/43bcda93af9f646d083fad678071b90a
-     */
-    const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
-    const alg = { name: 'AES-GCM', iv }; // specify algorithm to use
-    const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
-      'encrypt',
-    ]); // generate key from pw
-    const ivBase64 = Buffer.from(iv).toString('base64');
-
-    // NOTICE: This function is used as a transform stream and CANNOT BE ASYNC
-    const transform = (src) => {
-      logCopy('Encrypting', src);
       return through(async (chunk, enc, done) => {
         const plaintext = chunk.toString();
         const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
@@ -115,46 +100,19 @@ async function protect(settings) {
         // Prepends the iv string to the first chunk only
         done(null, '--CHUNK--' + ivBase64 + ciphertext);
       });
-    };
+    }
 
-    const destination = path.join(outputPath, filePath);
-    const copyOptions = expr.test(filePath) ? { transform } : void 0;
-
-    return copy(filePath, destination, copyOptions);
+    return null;
   };
 
-  const matches = await glob(path.join(settings.sourceFolder, '**'));
-  // Creates two separate lists of file and folder paths
-  const { folders, files } = matches.reduce(
-    (paths, path) => {
-      const stats = fs.statSync(path);
-
-      if (stats.isDirectory()) {
-        paths.folders.push(path);
-      }
-
-      if (stats.isFile()) {
-        paths.files.push(path);
-      }
-
-      return paths;
-    },
-    {
-      folders: [],
-      files: [],
-    }
+  const outputPath = path.join(
+    appBasePath,
+    settings.destFolder,
+    settings.sourceFolder
   );
 
-  if (files.length === 0) {
-    terminateWithMessage('There are no files to protect!');
-  }
-
   console.log('\nProtecting assets:');
-  folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
-
-  for (const file of files) {
-    await copyFile(file);
-  }
+  await copy(settings.sourceFolder, outputPath, { transform });
 
   return settings;
 }
