@@ -57,7 +57,7 @@ async function decryptContent(response) {
 
 // This regexp is manipulated by Gulp to add the necessary values
 const decryptUrlRegExp = new RegExp(
-  '__APP_FOLDER__/.+\\.(__ENCRYPT_EXTENSIONS__)$'
+  '__APP_FOLDER__/.+\\.(__ENCRYPT_EXTENSIONS__)(#.*)?$'
 );
 
 self.addEventListener('install', function () {
