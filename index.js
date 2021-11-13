@@ -76,6 +76,11 @@ function getPassword(settings) {
  * files with the extensions matching the given list
  */
 async function protect(settings) {
+  const { sourceFolder } = settings;
+
+  if (!fs.existsSync(sourceFolder)) {
+    terminateWithMessage(`Cannot find source folder: ${sourceFolder}`);
+  }
   /**
    * Encrypts plaintext using AES-GCM with supplied password, for decryption
    * with aesGcmDecrypt(). (c) Chris Veness MIT Licence
@@ -117,15 +122,10 @@ async function protect(settings) {
 
     return null;
   };
-
-  const outputPath = path.join(
-    appBasePath,
-    settings.destFolder,
-    settings.sourceFolder
-  );
+  const outputPath = path.join(appBasePath, settings.destFolder, sourceFolder);
 
   console.log('\nProtecting assets');
-  await copy(settings.sourceFolder, outputPath, { transform });
+  await copy(sourceFolder, outputPath, { transform });
 
   return settings;
 }
