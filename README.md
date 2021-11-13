@@ -48,6 +48,7 @@ Configuration options allow to identify the folder containing our app sources, w
 | sourceFolder      | Folder containing assets to protect                | `./app`                  |
 | destFolder        | Folder where the protected assets will be          | `./app-protected`        |
 | encryptExtensions | Comma separated list of file extensions to encrypt | `html,css,js`            |
+| indexFile         | Index file used for your app or website            | `index.html`             |
 | skipPrompt        | Assumes yes answer for any prompt                  | `false`                  |
 | hostUrl           | Helper to generate protected app URL in output     | `http://localhost:8080/` |
 
@@ -77,6 +78,7 @@ Options:
   -s, --sourceFolder <path>         folder containing assets to protect
   -d, --destFolder <path>           folder where the protected assets will be
   -e, --encryptExtensions <string>  comma separated list of file extensions to encrypt
+  -i, --indexFile <string>          index file used for your app or website
   -y, --skipPrompt                  assumes yes answer for any prompt
   -u, --hostUrl <url>               helper to generate protected app URL
   -h, --help                        display help for command

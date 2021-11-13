@@ -82,6 +82,13 @@ describe('utils/settings', () => {
 
         expect(options.encryptExtensions).to.have.members(['html', 'json']);
       });
+
+      it('should correctly set the indexFile if one is specified', async () => {
+        const argv = ['', '', '-ipage.htm'];
+        const options = await settings.readSettings(argv);
+
+        expect(options.indexFile).to.equal('page.htm');
+      });
     });
   });
 });

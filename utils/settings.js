@@ -6,6 +6,7 @@ const defaultSettings = {
   sourceFolder: './app',
   destFolder: './app-protected',
   encryptExtensions: 'html,css,js',
+  indexFile: 'index.html',
   skipPrompt: false,
   hostUrl: 'http://localhost:8080/',
 };
@@ -37,6 +38,11 @@ class Settings {
         '-e, --encryptExtensions <string>',
         'comma separated list of file extensions to encrypt',
         rcArgs.encryptExtensions
+      )
+      .option(
+        '-i, --indexFile <string>',
+        'index file used for your app or website',
+        rcArgs.indexFile
       )
       .option(
         '-y, --skipPrompt',

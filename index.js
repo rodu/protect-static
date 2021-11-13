@@ -191,6 +191,7 @@ function addLogin(settings) {
               const replacedContent = content
                 .toString()
                 .replace(/__APP_FOLDER__/, settings.sourceFolder)
+                .replace(/__INDEX_FILE__/, settings.indexFile)
                 .replace(/__VERSION_NUMBER__/, versionNumber)
                 .replace(
                   /__ENCRYPT_EXTENSIONS__/,
