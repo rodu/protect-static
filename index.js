@@ -146,47 +146,49 @@ async function protect(settings) {
   console.log('\nProtecting assets:');
   folders.forEach((folder) => mkdirp.sync(path.join(outputPath, folder)));
 
-  return Promise.all(files.map(copyFile))
-    .then(() => settings)
-    .catch((err) => console.error(err));
+  for (const file of files) {
+    await copyFile(file);
+  }
+
+  return settings;
 }
 
-function addLogin(settings) {
+async function addLogin(settings) {
   const outputPath = path.join(appBasePath, settings.destFolder);
   const modulePath = getModulePath();
   const sources = ['index.html', 'service-worker.js'];
   console.log('\nAdding login page:');
 
-  return Promise.all(
-    sources.map((source) => {
-      return copy(
-        path.join(modulePath, 'login', source),
-        path.join(outputPath, source),
-        {
-          transform: (src) => {
-            return through((chunk, enc, done) => {
-              const content = chunk.toString();
+  for (const source of sources) {
+    await copy(
+      path.join(modulePath, 'login', source),
+      path.join(outputPath, source),
+      {
+        transform: (src) => {
+          return through((chunk, enc, done) => {
+            const content = chunk.toString();
 
-              logCopy('Copying', src);
-              // Replaces the RegExp to match GET requests in the service worker
-              // based on the project settings
-              const replacedContent = content
-                .toString()
-                .replace(/__APP_FOLDER__/, settings.sourceFolder)
-                .replace(/__INDEX_FILE__/, settings.indexFile)
-                .replace(/__VERSION_NUMBER__/, versionNumber)
-                .replace(
-                  /__ENCRYPT_EXTENSIONS__/,
-                  settings.encryptExtensions.join('|')
-                );
+            logCopy('Copying', src);
+            // Replaces the RegExp to match GET requests in the service worker
+            // based on the project settings
+            const replacedContent = content
+              .toString()
+              .replace(/__APP_FOLDER__/, settings.sourceFolder)
+              .replace(/__INDEX_FILE__/, settings.indexFile)
+              .replace(/__VERSION_NUMBER__/, versionNumber)
+              .replace(
+                /__ENCRYPT_EXTENSIONS__/,
+                settings.encryptExtensions.join('|')
+              );
 
-              done(null, replacedContent);
-            });
-          },
-        }
-      );
-    })
-  ).then(() => settings);
+            done(null, replacedContent);
+          });
+        },
+      }
+    );
+  }
+
+  return settings;
 }
 
 function showCompletionInfo(settings) {
