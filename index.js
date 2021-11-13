@@ -38,9 +38,6 @@ const counters = {
 async function clean(settings) {
   const { destFolder } = settings;
 
-  // Reset the counters
-  counters.copiedFiles = counters.encryptedFiles = 0;
-
   if (fs.existsSync(destFolder)) {
     if (settings.skipPrompt) {
       console.log(chalk.green(`Deleting destination: ${destFolder}`));
@@ -111,7 +108,7 @@ async function protect(settings) {
             'base64'
           );
 
-          // Prepends the iv string to the first chunk only
+          // Prepends the iv string to the chunk
           done(null, ivBase64 + cipherChunk);
         },
       });
