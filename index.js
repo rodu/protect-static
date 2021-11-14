@@ -87,12 +87,6 @@ async function protect(settings) {
    */
   const pwUtf8 = new TextEncoder().encode(settings.password); // encode password as UTF-8
   const pwHash = await crypto.subtle.digest('SHA-256', pwUtf8); // hash the password
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
-  const alg = { name: 'AES-GCM', iv }; // specify algorithm to use
-  const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
-    'encrypt',
-  ]); // generate key from pw
-  const ivBase64 = Buffer.from(iv).toString('base64');
   const expr = new RegExp(`\\.(${settings.encryptExtensions.join('|')})$`);
   const transform = (filePath) => {
     if (expr.test(filePath)) {
@@ -101,6 +95,15 @@ async function protect(settings) {
 
       return new Transform({
         async transform(chunk, enc, done) {
+          // To guarantee the semantic security of the AES-GCM we must generate
+          // a different vector (iv) for every encryption we do
+          const iv = crypto.getRandomValues(new Uint8Array(12)); // get 96-bit random iv
+          const alg = { name: 'AES-GCM', iv }; // specify algorithm to use
+          const key = await crypto.subtle.importKey('raw', pwHash, alg, false, [
+            'encrypt',
+          ]); // generate key from pw
+          const ivBase64 = Buffer.from(iv).toString('base64');
+
           const plaintext = chunk.toString();
           const ptUint8 = new TextEncoder().encode(plaintext); // encode plaintext as UTF-8
           const ctBuffer = await crypto.subtle.encrypt(alg, key, ptUint8);
@@ -109,7 +112,7 @@ async function protect(settings) {
           );
 
           // Prepends the iv string to the chunk
-          done(null, ivBase64 + cipherChunk);
+          done(null, '--chunk--' + ivBase64 + cipherChunk);
         },
       });
     }

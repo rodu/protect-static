@@ -45,12 +45,11 @@ async function aesGcmDecrypt(ciphertext, password) {
 let password;
 async function decryptContent(response) {
   const ciphertext = await response.text();
-  const ivBase64 = ciphertext.slice(0, 12); // base64 iv
-  const cipherChunks = ciphertext.split(ivBase64).filter(Boolean);
+  const cipherChunks = ciphertext.split('--chunk--').filter(Boolean);
 
   let plaintext = '';
   for (const cipherChunk of cipherChunks) {
-    plaintext += await aesGcmDecrypt(ivBase64 + cipherChunk, password);
+    plaintext += await aesGcmDecrypt(cipherChunk, password);
   }
 
   const { status, statusText, headers } = response;
