@@ -45,7 +45,7 @@ async function aesGcmDecrypt(ciphertext, password) {
 let password;
 async function decryptContent(response) {
   const ciphertext = await response.text();
-  const cipherChunks = ciphertext.split('--chunk--').filter(Boolean);
+  const cipherChunks = ciphertext.split('|').filter(Boolean);
 
   let plaintext = '';
   for (const cipherChunk of cipherChunks) {

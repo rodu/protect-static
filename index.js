@@ -112,7 +112,7 @@ async function protect(settings) {
           );
 
           // Prepends the iv string to the chunk
-          done(null, '--chunk--' + ivBase64 + cipherChunk);
+          done(null, ivBase64 + cipherChunk + '|');
         },
       });
     }
