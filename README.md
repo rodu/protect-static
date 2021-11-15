@@ -2,7 +2,7 @@
 
 > Protect a static website released at a public URL
 
-<img src="https://raw.githubusercontent.com/rodu/protect-static/main/protect-static.png" alt="ProtectStatic diagram" style="display: block; margin: 0 auto; border: 0; max-width:910px; width: 100%;">
+<img src="https://raw.githubusercontent.com/rodu/protect-static/main/protect-static.svg" alt="ProtectStatic diagram" style="display: block; margin: 0 auto; border: 0; max-width:910px; width: 100%;">
 
 ---
 
@@ -23,15 +23,15 @@ This project provides a way to protect the sources of a static web site or singl
 
 When working on a project, we may need to give access to a restricted number of users or a customer. With **ProtectStatic** we can release a single page app (or a static website) to a public URL, while ensuring our sources remain secure from unintended audience.
 
-The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any textual file content.
+The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any **textual file content**.
+
+<small>_Encrypting images (or other binaries) is not supported._</small>
 
 ### Demo
 
-You can see a [demo](https://rodu.github.io/protect-static-demo/#47b7bfb65fa83ac9a71dcb0f6296bb6e) of a basic Gatsby app released on GitHub Pages and protected with ProtectStatic.
+You can see a [demo](https://rodu.github.io/protect-static-demo/#47b7bfb65fa83ac9a71dcb0f6296bb6e) of a basic Gatsby app released on GitHub Pages and protected with ProtectStatic. Here's the [GitHub repository](https://github.com/rodu/protect-static-demo) for the demo if you want to take a look.
 
-**Unlock key:** `Passw0rd!`
-
-Here's the [GitHub repository](https://github.com/rodu/protect-static-demo) for the demo if you want to take a look.
+To access, use the unlock key: `Passw0rd!`
 
 ## Install
 
@@ -106,11 +106,15 @@ Or define an npm script like this:
 
 And run it with: `npm run protect-static`
 
+### Specifying your password
+
+You can specify a password by setting a `PROTECT_STATIC_KEY` environment variable.
+
+The script looks for the encryption password the environment variable first; if a value is not set, **the script will automatically generate a strong password** and show it later.
+
 ## How encryption takes place
 
 The solution protects the release sources by encrypting them using the [AES-GCM algorithm](https://isuruka.medium.com/selecting-the-best-aes-block-cipher-mode-aes-gcm-vs-aes-cbc-ee3ebae173c).
-
-The script looks for the encryption password in a `PROTECT_STATIC_KEY` environment variable. If a value is not set, **the script will automatically generate a strong password** and show it later.
 
 The script copies the app source files to a release-ready folder (`destFolder`), while encrypting the contents. The output folder will also include a login page, alongside a service worker script used for decrypting contents on the fly (more on that later).
 
@@ -129,11 +133,11 @@ When the user navigates to the public URL for the app, they must possess two thi
 
 The verification hash (md5) allows an initial validation of the password entered in the login input box, before proceeding any further.
 
-Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[sourceFolder]/index.html` which represents the entry point of the app we are protecting.
+Once the password validates, the (readable password) value is passed on to a service worker script that the login page has loaded in the background. The service worker acknowledges receiving the password, and the browser redirects to the `/[sourceFolder]/[indexFile]` which represents the entry point of the app we are protecting.
 
 ## How decryption takes place
 
-When the user is redirected to `/[sourceFolder]/index.html`, the service worker proceeds to intercept all the `GET` requests made to the `/[sourceFolder]` folder for files matching any of the `encryptExtensions` entries.
+When the user is redirected to `/[sourceFolder]/[indexFile]`, the service worker proceeds to intercept all the `GET` requests made to the `/[sourceFolder]` folder for files matching any of the `encryptExtensions` entries.
 
 For each `GET` request matching this criteria, the service worker proceeds to decrypt the `Response` text on the fly, using the AES-GCM algorithm and the password initially provided.
 
@@ -166,7 +170,7 @@ To that extent, your handy npm command may be changed to something like:
 }
 ```
 
-Where the example `app` value here should match your `sourceFolder` value.
+Where the example `app` value here should match your `sourceFolder` value. The [demo repository](https://github.com/rodu/protect-static-demo) shows an example of doing that in the context of a Gatsby app.
 
 In general, non-absolute URLs (like in `scripts/main.js` with no leading `/`) should work out of the box.
 
