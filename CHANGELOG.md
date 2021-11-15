@@ -1,4 +1,4 @@
-# v1.3.0 - (2021-11-15)
+# v1.2.0 - (2021-11-15)
 
 - Uses a different iv for every encryption to guarantee the GCM security
 - Terminates execution if the sources fodler does not exists
