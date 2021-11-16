@@ -1,13 +1,10 @@
 # ProtectStatic
 
-> Protect a static website released at a public URL
-
-<img src="https://raw.githubusercontent.com/rodu/protect-static/main/protect-static.svg" alt="ProtectStatic diagram" style="display: block; margin: 0 auto; border: 0; max-width:910px; width: 100%;">
+## NOTICE: This package was a proof of concept and is now deprecated
 
 ---
 
 - [Overview](#overview)
-- [Install](#install)
 - [Configuration and usage](#configuration-and-usage)
 - [How encryption takes place](#how-encryption-takes-place)
 - [How the login works](#how-the-login-works)
@@ -26,18 +23,6 @@ When working on a project, we may need to give access to a restricted number of 
 The solution uses the [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) to implement End-to-End encryption and protect the source files of our app. By design, the solution encrypts the content of HTML, CSS and JavaScript files and can handle any **textual file content**.
 
 <small>_Encrypting images (or other binaries) is not supported._</small>
-
-### Demo
-
-You can see a [demo](https://rodu.github.io/protect-static-demo/#47b7bfb65fa83ac9a71dcb0f6296bb6e) of a basic Gatsby app released on GitHub Pages and protected with ProtectStatic. Here's the [GitHub repository](https://github.com/rodu/protect-static-demo) for the demo if you want to take a look.
-
-To access, use the unlock key: `Passw0rd!`
-
-## Install
-
-In your project (the one you want to protect) run:
-
-`npm install --save-dev protect-static`
 
 ## Configuration and usage
 
@@ -85,26 +70,6 @@ Options:
   -q, --quiet                       print only relevant messages to console
   -h, --help                        display help for command
 ```
-
-### Usage
-
-You can use npx directy, in combination with command line arguments or the `.protectstaticrc` file:
-
-`npx protect-static --encryptExtensions=css,js`
-
-Or define an npm script like this:
-
-```json
-{
-  "scripts": {
-    ...
-    "protect-static": "protect-static"
-    ...
-  }
-}
-```
-
-And run it with: `npm run protect-static`
 
 ### Specifying your password
 
@@ -162,15 +127,7 @@ For your app to be able to load resources, such as external CSS, images, or Java
 
 Having your app pointing at a resource such as `/scripts/main.js` **will result in a 404 Not Found error**. That's because the correct url after protect-static may have become something like `/app/scripts/main.js` depending on your configuration.
 
-To that extent, your handy npm command may be changed to something like:
-
-```json
-{
-  "protect-static": "PUBLIC_URL=/app/ npm run build && protect-static"
-}
-```
-
-Where the example `app` value here should match your `sourceFolder` value. The [demo repository](https://github.com/rodu/protect-static-demo) shows an example of doing that in the context of a Gatsby app.
+Where the example `app` value here should match your `sourceFolder` value.
 
 In general, non-absolute URLs (like in `scripts/main.js` with no leading `/`) should work out of the box.
 
